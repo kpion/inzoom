@@ -1,0 +1,1 @@
+/home/konrad/Documents/projects/inzoom.md
