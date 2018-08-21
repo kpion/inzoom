@@ -4,22 +4,32 @@
     "description": "Image zoom",
     "permissions": ["storage"],
     "background": {
-      "scripts": ["background.js"]
+      "scripts": ["src/background/background.js"]
     },
     "browser_action": {
-        "default_popup": "popup.html",
+        "default_popup": "src/dialog/dialog.html",
         "default_icon": {
-            "16": "images/get_started16.png",
-            "32": "images/get_started32.png",
-            "48": "images/get_started48.png",
-            "128": "images/get_started128.png"
+            "16": "assets/images/get_started16.png",
+            "32": "assets/images/get_started32.png",
+            "48": "assets/images/get_started48.png",
+            "128": "assets/images/get_started128.png"
           }        
-      },   
-     "icons": {
-        "16": "images/get_started16.png",
-        "32": "images/get_started32.png",
-        "48": "images/get_started48.png",
-        "128": "images/get_started128.png"
+    },   
+    "content_scripts": [
+        {
+          "matches": ["<all_urls>"],
+          
+          "js": ["assets/js/lightdom.js","assets/js/hamster.js","assets/js/inzoom.js","src/inject/inject.js"],
+          "css": ["src/inject/inject.css"],
+          "run_at": "document_start",
+          "all_frames": true
+        }
+    ],    
+    "icons": {
+        "16": "assets/images/get_started16.png",
+        "32": "assets/images/get_started32.png",
+        "48": "assets/images/get_started48.png",
+        "128": "assets/images/get_started128.png"
     },       
     "manifest_version": 2
   }
