@@ -1,7 +1,7 @@
 /*
 queryselector wrapper
 https://github.com/kpion/lightdom
-v. 1.0.0
+v. 1.0.1
 */
 (function (window) {
  
@@ -18,7 +18,7 @@ v. 1.0.0
             if (typeof parameter === 'string' && parameter !== '') {
                 //Object.assign(this, Array.from(this.context.querySelectorAll(parameter)));
                 nodes = Array.from(this.context.querySelectorAll(parameter));
-            } else if (parameter instanceof HTMLElement) {
+            } else if (parameter instanceof Element) {//used to be HTMLElement before v. 1.0.1
                 this.push (parameter);
             } else if (parameter instanceof NodeList || parameter instanceof HTMLCollection || parameter instanceof Array) {
                 //Object.assign(this, Array.from(parameter));

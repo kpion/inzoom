@@ -1,0 +1,62 @@
+{
+    "name": "Inzoom",
+    "version": "1.0",
+    "description": "Zoom in and out on images and videos using mouse wheel - \"inline\", without popups",
+
+    "permissions": ["storage"],
+    
+    "homepage_url": "https://github.com/kpion/inzoom",
+
+    "browser_action": {
+        "default_popup": "dialog/dialog.html",
+
+        "default_icon": {
+            "16": "static/images/camera_lens_128.png",
+            "32": "static/images/camera_lens_128.png",
+            "48": "static/images/camera_lens_128.png",
+            "128": "static/images/camera_lens_128.png"
+          },        
+          "default_title": "Inzoom - zoom in / out on images and videos"
+    },   
+
+    "background": {
+        "scripts": [
+            "config/default.js",
+            "lib/config.js", 
+            "background/background.js"
+        ]
+     },
+
+    "content_scripts": [
+        {
+          "matches": ["<all_urls>"],
+          
+          "js": [
+            "config/default.js",
+
+            "lib/lightdom.js",
+            "lib/config.js",
+            "lib/hamster.js",
+            "lib/point.js", 
+
+            "inzoom/inzoom.js"
+          ],
+          "run_at": "document_start",
+          "all_frames": true
+        }
+    ],    
+ 
+   
+    "options_ui": {
+        "page": "options/index.html",
+        "open_in_tab" : true
+    },
+
+    "icons": {
+        "16" : "static/images/camera_lens_128.png",
+        "32" : "static/images/camera_lens_128.png",
+        "48" : "static/images/camera_lens_128.png",
+        "128" : "static/images/camera_lens_128.png"
+    },       
+    "manifest_version": 2
+  }

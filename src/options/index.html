@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='UTF-8'>
+        <title>Inzoom options</title>
+        <link rel='stylesheet' type='text/css' href='../static/milligram/milligram.min.css'>
+        <link rel='stylesheet' type='text/css' href='style.css'>
+        
+        <script src="../lib/hamster.js"></script>	
+        <script src="../lib/lightdom.js"></script>
+        <script src="../lib/point.js"></script>
+
+        <script src="../config/default.js"></script>
+        <script src="../lib/config.js"></script>
+ 
+        <script src="options.js"></script>
+        <script src="../inzoom/inzoom.js"></script>
+    </head>
+    <body>
+        <main class = 'wrapper'>
+            <nav class = 'header'>
+                <section class = 'container'>
+                    <h1>Inzoom</h1>
+                    <div>Tests &amp; Configuration</div>
+                    <div class = 'clearfix'>
+                        <div class = 'float-right'><a href = 'https://github.com/kpion/inzoom'>On github.com</a></div>
+                    </div>    
+                </section>
+            </nav>
+
+
+            <section class = 'container space' id = 'tests' style = ''>
+                <h3>Tests area</h3>
+                <p class = 'note'>
+                    Hover mouse over the video or image, press the modifier key(s) and use mouse wheel to zoom in or out.<br>
+                    Optionally, click and drag to position the element.
+                </p>
+
+                <div style = 'float:left;width:366px;height:200px;border:1px solid #bbb;padding:3px;overflow:hidden'>
+                    <img src = '../static/images/test_photo.jpeg'>
+                </div>
+
+                <div style = 'float:left;margin-left:20px;'>
+                        <iframe width="366" height="200" src="https://www.youtube.com/embed/YE7VzlLtp-4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    </div>
+    
+                <div class = 'clearfix'></div>
+            </section>   
+
+
+            
+            <section class = 'container space'>
+                <h3>Configuration</h3>    
+                <form id = 'config'>
+                    <!--
+                    zoom : {
+                        modifiers : {
+                            shift : true,
+                            ctrl : false,
+                            alt : false,
+                        },
+                        wheel : {
+                            direction_reversed : false
+                        },    
+                
+                    },
+                
+                
+                    dragging : {
+                        enabled : true
+                    }                        
+                    -->
+                    <fieldset>
+                        <h4>Zoom Modifiers</h4>
+
+                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.shift" />Shift</label>
+                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.alt" />Alt</label>
+                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.ctrl" />Ctrl</label>
+
+                        <h4>Wheel</h4>
+
+                        <label class = 'label-inline'><input type="checkbox" name = 'zoom.wheel.direction' value = '1'/>Reverse direction</label>
+                        
+
+                        <h4>Dragging</h4>
+
+                        <label class = 'label-inline'><input type="checkbox" name = "dragging.enabled" />Enable dragging</label>
+                        <p class = 'note'>That is, after you zoom in/out an element, this element becomes "draggable", so you can move it around in its container</p>
+
+                        <br>
+                        <input class="button" type="submit" value="Save">
+                        
+                        <div class = 'message msg-inline  msg-default success'></div>
+
+                    </fieldset>
+                </form>
+            </section>
+             
+        </main>
+        
+    </body>
+</html>
