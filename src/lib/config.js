@@ -7,7 +7,7 @@ Any storage engine can be used, like window.localStorage, or chrome.storage.loca
 All the data is stored under **one** key (by default called simply 'config'), so it's probably 
 not a good option to store huge amounts of data, it's more tailored for application configuration.
 
-more: https://github.com/kpion
+Source: https://github.com/kpion
 
 Notes: 
  Should work fine in FX and Chrome and all the others

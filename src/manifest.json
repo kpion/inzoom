@@ -8,7 +8,7 @@
     "homepage_url": "https://github.com/kpion/inzoom",
 
     "browser_action": {
-        "default_popup": "dialog/dialog.html",
+        "default_popup": "action/index.html",
 
         "default_icon": {
             "16": "static/images/camera_lens_128.png",
@@ -42,7 +42,7 @@
             "inzoom/inzoom.js"
           ],
           "run_at": "document_start",
-          "all_frames": true
+          "all_frames" : true
         }
     ],    
  

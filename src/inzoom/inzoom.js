@@ -41,7 +41,7 @@ class ElementDraggable{
 
     constructor(element = null){
 
-        this.element = null;
+        this.lelement = null;
         this.lastMousePos = new Point();
         this.mouseIsDown = false;
         this.wasMovement = false;
@@ -52,9 +52,9 @@ class ElementDraggable{
     }
 
     attach(element){
-        this.element = element;
-
-        this.element.addEventListener('mousedown', (event) => {
+        this.lelement = l(element);
+        this.lelement.css('cursor','move');
+        this.lelement.on('mousedown', (event) => {
             if(event.button === 0){//left mouse button
                 this.mouseIsDown = true;
             
@@ -66,6 +66,12 @@ class ElementDraggable{
                 //y: div.offsetTop - e.clientY
         
                 this.lastMousePos.set(event.clientX, event.clientY);
+
+                //preventing entering the 'drag' mode in FX.
+                //this is required by fx when img (or other element) is in <a href...>, 
+                //even doing 'preventDefault' on 'dragStart' doesn't help
+                event.preventDefault();
+
           }
     
         }, true);
@@ -82,7 +88,7 @@ class ElementDraggable{
                 //we want to know a difference in position, between last mouse pos and current mouse pos.
                 //this will give us an idea about how much move the element (we can't use absolute values here, with transformations, afaik) 
                 let offset = new Point(event.clientX - this.lastMousePos.x, event.clientY - this.lastMousePos.y);
-                let computedStyle = window.getComputedStyle(this.element);
+                let computedStyle = window.getComputedStyle(this.lelement[0]);
                 //by def. it's 'none'
                 let transform = computedStyle.transform;  
                 if(transform === 'none'){
@@ -96,19 +102,29 @@ class ElementDraggable{
                     }
                 }
                 //we cannot do div.style.transform+=... because if transformations are set in .css it won't be here. 
-                this.element.style.transform = transform + ` translate(${offset.x}px,${offset.y}px)`;
+                this.lelement[0].style.transform = transform + ` translate(${offset.x}px,${offset.y}px)`;
                 this.lastMousePos.set(event.clientX, event.clientY);
             }
         }, true);      
 
-        this.element.addEventListener('click', (event) => {
+        //fx seems to require it on linked images. 
+        //Or maybe not, preventDefault on mouseDown seems to do the job
+        /*
+        this.lelement.on("dragstart", function( event ) {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('prevented dragstart');
+            return false;            
+        }, false);        
+        */
+
+        this.lelement.on('click', (event) => {
             let preventDefault = false;
             if(this.wasMovement){
                 preventDefault = true;
             }
             this.wasMovement = false;
             if(preventDefault){
-                console.log('prevented click');
                 event.preventDefault();
                 event.stopPropagation();
                 return false;
@@ -189,8 +205,7 @@ class Inzoom{
     run(){
         let hamsterTarget = document.body;
         Hamster(hamsterTarget).wheel((...params) => this.onWheel(...params));
-        //this one is just for some tests...
-        document.body.addEventListener('click',event => this.onClick(event));
+        
         //tests:
         //console.log('config.getAll get all:',this.config.getAll());
         if(insideExtension){
@@ -198,7 +213,7 @@ class Inzoom{
             //btw. chrome.storage is not the same as config.storage, because the later is for example
             //chrome.storage.local
             chrome.storage.onChanged.addListener((event) => {
-                //console.log('config changed...');
+                //console.log('config changed for ' + window.location.href);
                 this.config.clearAll(false).load();
             });
         }
@@ -323,10 +338,11 @@ class Inzoom{
             if(typeof this.lastElementStyle['outline'] !== 'undefined'){
                 lElement.css('outline',this.lastElementStyle['outline']);
             }
-        },2000);
+        },600);
 
-        console.log('-------------zooming-----------------');
-        console.log('type: ' + elementInfo.type);
+        //console.log('-------------zooming-----------------');
+        //console.log('type: ' + elementInfo.type);
+
         let hElem = lElement[0];
         //is this the exactly same element as last time?
         let sameElementAsPreviously = this.lastElement === hElem;
@@ -334,7 +350,7 @@ class Inzoom{
         if(!sameElementAsPreviously){
             this.lastElementStyle = {};
             Object.assign(this.lastElementStyle,lElement[0].style);
-            
+            lElement.css('outline','1px dotted blue');
         }    
         
         let hParent = hElem.parentNode;
@@ -405,16 +421,6 @@ class Inzoom{
         this.findAndZoom(l(event.target),event.originalEvent,deltaX,deltaY);
     }
 
-    //click somewhere on the page (body)
-    onClick(event){
-        if(event.altKey){
-            console.log('test (readonly) mode');
-            console.log('ev:',event);
-            this.testMode = true;
-            this.findAndZoom(l(event.target),event,0,1);
-            this.testMode = false;
-        }
-    }
 }
 
 
@@ -436,7 +442,7 @@ function inzoomSendMessage(param = 'default'){
 
 
 function init(){
-    console.log('in zoom init called');
+    console.log('in zoom init called in url:' + window.location.href);
     if(insideExtension){
         //on pages testing inzoom directly (via script src...) we can put in the head tag: 
         //<meta name="EnableInzoomExtension" content="false">
@@ -448,7 +454,7 @@ function init(){
             return;
         }
     }
-    console.log('in zoom initing, inside extension: ',insideExtension);
+    console.log('in zoom initing, inside extension: ', insideExtension);
 
 
     //if we are *not* inside an extension,  we'll change the default params for Config class
@@ -463,6 +469,7 @@ function init(){
             default : application.config, //this one should come from src/config/default.js
         }
     }
+    //note: config is being reread everytime user changes it in preferences.
     let config = new DotConfig(configParams);
     config.load(()=>{
         let iz = new Inzoom(config);
@@ -473,7 +480,7 @@ function init(){
     
     document.addEventListener('keydown', (event) => {
         if(event.key == '.' && event.altKey){
-            console.log('internal action started...');
+            console.log('inzoom internal action started...');
             //inzoomSendMessage('sent');
         }
     }, true);    

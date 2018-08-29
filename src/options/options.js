@@ -1,5 +1,6 @@
 
 function run(){
+    let form = document.querySelector("form#config")
     //note: defaults were already loaded into storage on install.
     var config = new DotConfig({
         //if we're not in an extension - we'll give null as 'storage', so we can test other stuff, like css.
@@ -44,7 +45,7 @@ function run(){
         });
     }
 
-    function save() {
+    function save(showMessage = false) {
         l('form#config input').each(element => {
             if(element.type === 'checkbox'){
                 let val = false;
@@ -56,14 +57,22 @@ function run(){
                 config.set(element.name,element.value);
             }
         })
-        message('Saved','success');
+        console.log('form saved');
+        if(showMessage){
+            message('Saved','success');
+        }
     }
         
     document.querySelector("form#config").addEventListener("submit", event => {
         event.preventDefault();
-        save();
+        save(true);
     });	
-    
+
+    form.addEventListener("change", function () {
+        //console.log("Form has changed! change");
+        //works but... hmm...
+        save();
+    });    
 }
 
 window.addEventListener("DOMContentLoaded", function(){

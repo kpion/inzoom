@@ -14,7 +14,14 @@
         <script src="../lib/config.js"></script>
  
         <script src="options.js"></script>
+        
+        <!-- 
+            yes, this *is* necessary. The fact that we can see a 'welcome' console.log from inside inzoom.js
+            is because we have a video here in irame, which does call iframe independly.
+            That is also why we have the message twice.
+        -->
         <script src="../inzoom/inzoom.js"></script>
+        
     </head>
     <body>
         <main class = 'wrapper'>
@@ -52,24 +59,7 @@
             <section class = 'container space'>
                 <h3>Configuration</h3>    
                 <form id = 'config'>
-                    <!--
-                    zoom : {
-                        modifiers : {
-                            shift : true,
-                            ctrl : false,
-                            alt : false,
-                        },
-                        wheel : {
-                            direction_reversed : false
-                        },    
-                
-                    },
-                
-                
-                    dragging : {
-                        enabled : true
-                    }                        
-                    -->
+                   
                     <fieldset>
                         <h4>Zoom Modifiers</h4>
 

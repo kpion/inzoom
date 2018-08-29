@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel='stylesheet' type='text/css' href='../static/milligram/milligram.min.css'>
+    <script src="../lib/lightdom.js"></script>
+    <script src="action.js"></script>    
+    <style>
+      body{
+        min-width:200px;
+      }
+      h1{
+        font-size:140%;
+      }
+      body{
+        width:250px;
+      }
+
+      ul.vmenu{
+        border-radius: 5px;
+        list-style-type:none;
+        background-color:white;
+      }
+
+      ul.vmenu li a{
+          padding-left:50px;
+          height:50px;
+          line-height:50px;
+          display:block;
+          overflow:hidden;
+          position:relative;
+          text-decoration:none;
+          text-transform:uppercase;
+          font-size:14px;
+          color:#686868;
+          transition:all 0.3s linear;		
+      }
+
+        ul.vmenu li a:hover {
+          background-color:#efefef;
+        }
+        
+        ul.vmenu li a{
+          background-repeat:no-repeat;
+          background-size: 16px;
+          background-position: 20px 15px;
+        }
+        ul.vmenu li a.options{
+          background-image: url('../static/images/config.png')
+
+        }
+        ul.vmenu li a.home{
+          background-image: url('../static/images/home.png')
+
+        }
+
+    </style>
+  </head>
+  <body>
+    <ul class = 'vmenu'>
+
+      <li>
+        <a class = 'options' id = 'openOptions' href = 'javascript:;'>Options</a>
+      </li>
+
+      <li>
+          <a class = 'home' data-url = 'https://github.com/kpion/inzoom' href = 'https://github.com/kpion/inzoom'>
+            Home page &amp; source
+          </a>
+      </li>
+  
+    </ul>
+  </body>
+</html>
