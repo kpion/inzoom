@@ -277,22 +277,39 @@ class Inzoom{
         //};        
         let result = this.getElementInfo(lElement);
 
-        //if nothing recognized, we'll use current mouse pointer to find all the elements under cursor to find out 
-        //something which we can zoom in/out
+        //if nothing recognized, we'll use another method 
         if(result.type === null){
-            //let elements = this.elementsFromPoint(event.clientX,event.clientY);
-            let elements = document.elementsFromPoint(event.clientX,event.clientY);
-            for (var element of elements) {
-                result = this.getElementInfo(l(element));
-                if(result.type !== null){
-                    break;
-                }
-            }            
-            console.log('all elements:',elements);
+            result = this.findElement2(document,event);
         }
         return result;
     }
 
+    //we'll use current mouse pointer to find all the elements under cursor to find out 
+    //something which we can zoom in/out
+    //root at first is simply 'document', then, when going recursive, it can change into something else
+    //like a shadow element
+    findElement2(root, event){
+        let result = {
+            type : null, //img, background-image
+            lElement : null,
+        };        
+        //let elements = this.elementsFromPoint(event.clientX,event.clientY);
+        let elements = root.elementsFromPoint(event.clientX,event.clientY);
+        for (var element of elements) {
+            /*
+            if(typeof element.shadowRoot !== 'undefined' && element.shadowRoot){
+                console.log('found shadow!:',element.shadowRoot);
+                console.log(element.shadowRoot.elementsFromPoint(event.clientX,event.clientY));
+            }*/
+            result = this.getElementInfo(l(element));
+            if(result.type !== null){
+                break;
+            }
+        }            
+        console.log('all elements:',elements);
+        return result;
+        
+    }
     /*
     modifies element's transform:matrix - used by zoomElement
     does not seem to be needed o.O see the zoomElement 
