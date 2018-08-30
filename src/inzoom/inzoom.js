@@ -242,6 +242,11 @@ class Inzoom{
             result.lElement = lElement;
         }
 
+        if(result.type === null && lElement.is('canvas')) {
+            result.type = 'canvas';
+            result.lElement = lElement;
+        }
+
         if(result.type === null) {
             let computedStyle = window.getComputedStyle(hElem);
             
@@ -336,7 +341,7 @@ class Inzoom{
         //restoring old style:
         setTimeout(()=>{
             if(typeof this.lastElementStyle['outline'] !== 'undefined'){
-                lElement.css('outline',this.lastElementStyle['outline']);
+                //lElement.css('outline',this.lastElementStyle['outline']);
             }
         },600);
 
@@ -350,7 +355,7 @@ class Inzoom{
         if(!sameElementAsPreviously){
             this.lastElementStyle = {};
             Object.assign(this.lastElementStyle,lElement[0].style);
-            lElement.css('outline','1px dotted blue');
+            //lElement.css('outline','1px dotted blue');
         }    
         
         let hParent = hElem.parentNode;
@@ -395,8 +400,8 @@ class Inzoom{
 
         //moving elements (dragging) 
         if(!this.testMode && !sameElementAsPreviously && this.config.all().dragging.enabled === true){
-            if(typeof hElem.inzoomMoveableInstance === 'undefined'){
-                hElem.inzoomMoveableInstance = new ElementDraggable(hElem);
+            if(typeof hElem.inzoomDraggableInstance === 'undefined'){
+                hElem.inzoomDraggableInstance = new ElementDraggable(hElem);
             }
         }
     }
@@ -480,8 +485,11 @@ function init(){
     
     document.addEventListener('keydown', (event) => {
         if(event.key == '.' && event.altKey){
-            console.log('inzoom internal action started...');
+            console.log('inzoom internal test started...');
+            console.log('t2');
             //inzoomSendMessage('sent');
+            //console.log(document.querySelectorAll('.addedAtRuntime'));
+            //console.log(JSON.parse(JSON.stringify(document));
         }
     }, true);    
     

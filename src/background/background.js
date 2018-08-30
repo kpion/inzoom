@@ -18,7 +18,10 @@ function install(details){
   //when first removing and then installing again the ext.
   if(details.reason === 'install' || details.reason === 'update'){//all options:  "install" "update" "browser_update" "shared_module_update"
     //saving our default config
-    config.setAll(application.config).save();
+    config.setAll(application.config).save(() => {
+      //yeah, it works.
+      //chrome.runtime.openOptionsPage(); 
+    });
   }
   
 }
@@ -35,5 +38,4 @@ function handleMessage(request, sender, sendResponse) {
   });  
 }
 chrome.runtime.onMessage.addListener(handleMessage);
-
 

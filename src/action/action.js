@@ -3,14 +3,16 @@
 
 function run(){
     l('#openOptions').on('click',ev => {
-        console.log('clicked');
         chrome.runtime.openOptionsPage(); 
+        window.close();//closing this window (action popup)
     }) ;
 
     //whatever has the data-url attr makes it a link:
     l('[data-url]').on('click',ev => {
+        ev.preventDefault();
         var url = ev.target.getAttribute('data-url');
         chrome.tabs.create({'url': url});
+        window.close();//closing this window (action popup)
     })
 
 }

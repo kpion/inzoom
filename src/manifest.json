@@ -25,6 +25,7 @@
             "lib/config.js", 
             "background/background.js"
         ]
+       
      },
 
     "content_scripts": [
