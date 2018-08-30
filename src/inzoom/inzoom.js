@@ -191,9 +191,9 @@ class Inzoom{
         //config like wheel direction, keyboard shortcuts etc.
         this.config = config;
         //recently modified element (HTMLElement)
-        this.lastElement = null;
+        this.curElement = null;
         //last element style *copied* before doing anything.
-        this.lastElementStyle = null;
+        this.curElementStyle = null;
         //recently used zindex, so... the next one in the next element selected will be higher:)
         this.lastZIndex = 0;
 
@@ -203,9 +203,14 @@ class Inzoom{
 
     //called when document ready and config loaded:
     run(){
-        let hamsterTarget = document.body;
-        Hamster(hamsterTarget).wheel((...params) => this.onWheel(...params));
-        
+        try{
+            let hamsterTarget = document.body;
+            Hamster(hamsterTarget).wheel((...params) => this.onWheel(...params));
+        }catch(error){
+            //the above happens really rarely, e.g. on .svg documents alone (not embedded but opened directly in browser)
+            //we are catching this only to no pollute console with errors.
+            return false;
+        }
         //tests:
         //console.log('config.getAll get all:',this.config.getAll());
         if(insideExtension){
@@ -296,17 +301,22 @@ class Inzoom{
         //let elements = this.elementsFromPoint(event.clientX,event.clientY);
         let elements = root.elementsFromPoint(event.clientX,event.clientY);
         for (var element of elements) {
-            /*
+
             if(typeof element.shadowRoot !== 'undefined' && element.shadowRoot){
                 console.log('found shadow!:',element.shadowRoot);
-                console.log(element.shadowRoot.elementsFromPoint(event.clientX,event.clientY));
-            }*/
+                //console.log(element.shadowRoot.elementsFromPoint(event.clientX,event.clientY));
+                result = this.findElement2(element.shadowRoot, event);
+                if(result.type !== null){
+                    break;
+                }
+    
+            }
             result = this.getElementInfo(l(element));
             if(result.type !== null){
                 break;
             }
         }            
-        console.log('all elements:',elements);
+        
         return result;
         
     }
@@ -357,8 +367,8 @@ class Inzoom{
             
         //restoring old style:
         setTimeout(()=>{
-            if(typeof this.lastElementStyle['outline'] !== 'undefined'){
-                //lElement.css('outline',this.lastElementStyle['outline']);
+            if(typeof this.curElementStyle['outline'] !== 'undefined'){
+                //lElement.css('outline',this.curElementStyle['outline']);
             }
         },600);
 
@@ -367,11 +377,11 @@ class Inzoom{
 
         let hElem = lElement[0];
         //is this the exactly same element as last time?
-        let sameElementAsPreviously = this.lastElement === hElem;
-        this.lastElement = hElem;
+        let sameElementAsPreviously = this.curElement === hElem;
+        this.curElement = hElem;
         if(!sameElementAsPreviously){
-            this.lastElementStyle = {};
-            Object.assign(this.lastElementStyle,lElement[0].style);
+            this.curElementStyle = {};
+            Object.assign(this.curElementStyle,lElement[0].style);
             //lElement.css('outline','1px dotted blue');
         }    
         
