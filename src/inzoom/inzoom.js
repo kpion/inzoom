@@ -196,8 +196,8 @@ class Inzoom{
         this.curElementStyle = null;
         //recently used zindex, so... the next one in the next element selected will be higher:)
         this.lastZIndex = 0;
-
-        
+        //"current"  mouse position (as recorded in )  
+        this.mousePos =  new Point();
         this.testMode = false;
     }
 
@@ -211,6 +211,16 @@ class Inzoom{
             //we are catching this only to no pollute console with errors.
             return false;
         }
+        //only for the sake of having this.mousePos (for... whatever reason)
+        document.addEventListener('mousemove', (event) => {
+            this.onMouseMove(event);
+        }, true); 
+
+        document.addEventListener('keydown', (event) => {
+            this.onKeyDown(event);
+        }, true);    
+    
+        
         //tests:
         //console.log('config.getAll get all:',this.config.getAll());
         if(insideExtension){
@@ -272,19 +282,26 @@ class Inzoom{
     should be an <img> or, if that cannot be found, any element with background-image, or ... if that cannot be
     found then IDK...
     @param  lElement - the (lightdom) element where the event (wheel, click, whatever) started.
-    */
-    findElement(lElement, event){
+    @param Point point : a mouse point
+    **/
+    findElement(lElement, point){
         //this metod will get what we understand we have in the element
         //return example:
         //{
            //type : null, //img, background-image
            //lElement : null,
-        //};        
-        let result = this.getElementInfo(lElement);
+        //}; 
+        let result = {
+            type : null, //img, background-image
+            lElement : null,
+        };               
+        if(lElement != null){
+            result = this.getElementInfo(lElement);
+        };
 
         //if nothing recognized, we'll use another method 
         if(result.type === null){
-            result = this.findElement2(document,event);
+            result = this.findElement2(document,point);
         }
         return result;
     }
@@ -293,19 +310,19 @@ class Inzoom{
     //something which we can zoom in/out
     //root at first is simply 'document', then, when going recursive, it can change into something else
     //like a shadow element
-    findElement2(root, event){
+    findElement2(root, point){
         let result = {
             type : null, //img, background-image
             lElement : null,
         };        
         //let elements = this.elementsFromPoint(event.clientX,event.clientY);
-        let elements = root.elementsFromPoint(event.clientX,event.clientY);
+        let elements = root.elementsFromPoint(point.x, point.y); 
         for (var element of elements) {
 
             if(typeof element.shadowRoot !== 'undefined' && element.shadowRoot){
                 console.log('found shadow!:',element.shadowRoot);
                 //console.log(element.shadowRoot.elementsFromPoint(event.clientX,event.clientY));
-                result = this.findElement2(element.shadowRoot, event);
+                result = this.findElement2(element.shadowRoot, point);
                 if(result.type !== null){
                     break;
                 }
@@ -377,9 +394,9 @@ class Inzoom{
 
         let hElem = lElement[0];
         //is this the exactly same element as last time?
-        let sameElementAsPreviously = this.curElement === hElem;
+        let curElementChanged = (this.curElement !== hElem);
         this.curElement = hElem;
-        if(!sameElementAsPreviously){
+        if(curElementChanged){
             this.curElementStyle = {};
             Object.assign(this.curElementStyle,lElement[0].style);
             //lElement.css('outline','1px dotted blue');
@@ -410,7 +427,7 @@ class Inzoom{
        
         //console.log('parent overflow:',parentComputedStyle['overflow']);
         /*
-        if(moveElemToFront && !sameElementAsPreviously && !this.testMode){
+        if(moveElemToFront && curElementChanged && !this.testMode){
             if(parentComputedStyle['overflow'] === 'hidden'){
                 
                 let zIndex = computedStyle['z-index'];
@@ -426,7 +443,7 @@ class Inzoom{
         */
 
         //moving elements (dragging) 
-        if(!this.testMode && !sameElementAsPreviously && this.config.all().dragging.enabled === true){
+        if(!this.testMode && curElementChanged && this.config.all().dragging.enabled === true){
             if(typeof hElem.inzoomDraggableInstance === 'undefined'){
                 hElem.inzoomDraggableInstance = new ElementDraggable(hElem);
             }
@@ -434,7 +451,7 @@ class Inzoom{
     }
 
     findAndZoom(lElement, event, deltaX, deltaY){
-        let found = this.findElement(lElement, event);
+        let found = this.findElement(lElement, new Point(event.clientX,event.clientY));
         if(found.lElement){
             this.zoomElement(found,deltaX, deltaY);
         }
@@ -453,6 +470,21 @@ class Inzoom{
         this.findAndZoom(l(event.target),event.originalEvent,deltaX,deltaY);
     }
 
+    //only for the purpose of having this.mousePos set
+    onMouseMove(event){
+        this.mousePos.set(event.clientX, event.clientY);
+    }
+
+    onKeyDown(event){
+        //escape on "our" curElement? Then we'll undo our changes.
+        if(event.keyCode == 27){
+            let foundResult = this.findElement(null, this.mousePos);
+            if(foundResult.lElement && foundResult.lElement[0] === this.curElement){
+                //this will revert changes made by zooming and dragging.
+                this.curElement.style.transform = this.curElementStyle.transform;                     
+            }
+        }
+    }
 }
 
 
