@@ -53,11 +53,11 @@ class ElementDraggable{
 
     attach(element){
         this.lelement = l(element);
-        this.lelement.css('cursor','move');
+        element.classList.add('inzoom-draggable');
         this.lelement.on('mousedown', (event) => {
             if(event.button === 0){//left mouse button
                 this.mouseIsDown = true;
-            
+                this.lelement[0].classList.add('inzoom-dragging');
                 //'offset' relative to top/left of clicked element. So if clicked at exactly topleft we'll have 0,0 here  
                 //10,0 means 10 pixels to the right
                 //offset.set(event.clientX - div.offsetLeft, event.clientY - div.offsetTop); 
@@ -77,6 +77,7 @@ class ElementDraggable{
         }, true);
     
         document.addEventListener('mouseup', () => {
+            this.lelement[0].classList.remove('inzoom-dragging');
             this.mouseIsDown = false;
         }, true);
     
@@ -135,6 +136,7 @@ class ElementDraggable{
             //maybe for some reason we got crazy with our dragdropping, and user pressed escape. 
             if (this.mouseIsDown && event.keyCode == 27){
                 this.mouseIsDown = false;
+                this.lelement[0].classList.remove('inzoom-dragging');
             }
             
            
@@ -184,7 +186,26 @@ class ElementDraggable{
     */
   
 }
-
+class Utils{
+    /**
+     * Returns an inline style, i.e. element.style - thing is however it doesn't really work in FX,
+     * because it's not really a simple object, instead it's a CSSStyleDeclaration and we should do it
+     * this way.
+     * Useful for making a 'backup' of user defined inline-style before changing it, so we can later modify it.  
+     * @param HTMLElement element 
+     * @return object with styles *modfied* by user. Otherwise it's not there. 
+     */
+    static getElementInlineStyle(element){
+        var style = element.style;
+        var result = {}; 
+        for(let i = 0; i < element.style.length; i++) {
+            let propName = style.item(i);
+            //console.log(`Key: "${propName}" Value: "${styleDeclaration.getPropertyValue(propName)}"`);
+            result[propName] = style.getPropertyValue(propName);
+        }
+        return result;
+    }
+}
 class Inzoom{
 
     constructor(config){
@@ -199,6 +220,9 @@ class Inzoom{
         //"current"  mouse position (as recorded in )  
         this.mousePos =  new Point();
         this.testMode = false;
+
+        //on contextmenu event - needed when user runs a context menu command.
+        this.contextMenuEvent = null;
     }
 
     //called when document ready and config loaded:
@@ -231,6 +255,16 @@ class Inzoom{
                 //console.log('config changed for ' + window.location.href);
                 this.config.clearAll(false).load();
             });
+
+            chrome.runtime.onMessage.addListener(event => {
+                this.onMessage(event);
+            });                    
+
+            //to store clientX and clientY coordinates
+            document.addEventListener('contextmenu', (event) => {
+                this.onContextMenu(event);
+            }, true);    
+
         }
 
         
@@ -384,9 +418,7 @@ class Inzoom{
             
         //restoring old style:
         setTimeout(()=>{
-            if(typeof this.curElementStyle['outline'] !== 'undefined'){
-                //lElement.css('outline',this.curElementStyle['outline']);
-            }
+            //lElement.css('outline',this.curElementStyle['outline'] || '');
         },600);
 
         //console.log('-------------zooming-----------------');
@@ -397,9 +429,9 @@ class Inzoom{
         let curElementChanged = (this.curElement !== hElem);
         this.curElement = hElem;
         if(curElementChanged){
-            this.curElementStyle = {};
-            Object.assign(this.curElementStyle,lElement[0].style);
-            //lElement.css('outline','1px dotted blue');
+            this.curElementStyle = Utils.getElementInlineStyle(lElement[0]);
+            //console.log('copied style:',this.curElementStyle);
+            //lElement.css('outline','1px dotted red');
         }    
         
         let hParent = hElem.parentNode;
@@ -457,6 +489,39 @@ class Inzoom{
         }
     }
 
+    /**
+     * Right now used only by onContextMenu
+     * @param {HTMLElement} target element 
+     * @param {Object} command, with action and possible other properties. 
+     */
+    runCommand(element, command){
+        let makeDraggable = false;
+        if(command.action === 'transform'){
+            
+            //is this the exactly same element as last time?
+            let curElementChanged = (this.curElement !== element);
+            this.curElement = element;
+            if(curElementChanged){
+                makeDraggable = true;
+                this.curElementStyle = Utils.getElementInlineStyle(element);
+            }    
+            let computedStyle = window.getComputedStyle(element);
+            //this.transformElement(lElement,ratio);    
+            let transform = computedStyle.transform;
+            if(transform === '' || transform === 'none'){
+                transform = 'matrix(1,0,0,1,0,0)';
+            }         
+            //hmmm it seems to work o.O and no - it doesn't accumulate, it's more like recalculated.   
+            //element.style.transform = transform + ` scale(${ratio},${ratio})`;
+            element.style.transform = transform + ' ' + command.data;
+        }
+        //moving elements (dragging) 
+        if(makeDraggable && this.config.all().dragging.enabled === true){
+            if(typeof element.inzoomDraggableInstance === 'undefined'){
+                element.inzoomDraggableInstance = new ElementDraggable(element);
+            }
+        }        
+    }
     //wheel somewhere on the page (body)
     onWheel(event, delta, deltaX, deltaY){
         //if required modifier keys do not meet keyboard status:
@@ -476,12 +541,41 @@ class Inzoom{
     }
 
     onKeyDown(event){
-        //escape on "our" curElement? Then we'll undo our changes.
+        //escape key on "our" curElement? Then we'll undo our changes.
         if(event.keyCode == 27){
             let foundResult = this.findElement(null, this.mousePos);
             if(foundResult.lElement && foundResult.lElement[0] === this.curElement){
                 //this will revert changes made by zooming and dragging.
-                this.curElement.style.transform = this.curElementStyle.transform;                     
+                this.curElement.style.transform = this.curElementStyle.transform || '';                     
+            }
+        }
+    }
+
+    /**
+     * 
+     * contextmenu even on this document. We need it to remember click position and maybe other things.
+     */
+    onContextMenu(event){
+        this.contextMenuEvent = {};
+        //copying (only scalar props) to our contextMenuEvent
+        for (var prop in event){
+            if(typeof event[prop] === 'object'){
+                continue;
+            }
+            this.contextMenuEvent[prop] = event[prop];
+        }        
+    }
+
+    onMessage(message){
+        console.log('on message:');
+        console.log(message);
+        if(message.command){
+            if(message.command.action){//eg. 'transform'
+                let findResult = this.findElement2(document, new Point(this.contextMenuEvent.clientX,this.contextMenuEvent.clientY));
+                console.log('  ctx elem:', findResult);
+                if(findResult.type){
+                    this.runCommand(findResult.lElement[0],message.command);
+                }
             }
         }
     }

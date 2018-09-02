@@ -1,0 +1,16 @@
+
+/*
+only if 'dragging' is 'on' in options.
+*/
+.inzoom-draggable{
+    cursor: -webkit-grab; 
+    cursor: grab;
+ }
+
+/*
+when the element is being dragged
+*/
+.inzoom-dragging{
+    cursor: -webkit-grabbing; 
+    cursor: grabbing;
+ }

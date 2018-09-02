@@ -3,7 +3,7 @@
     "version": "1.0",
     "description": "Zoom in and out on images and videos using mouse wheel - \"inline\", without popups",
 
-    "permissions": ["storage"],
+    "permissions": ["storage", "contextMenus"],
     
     "homepage_url": "https://github.com/kpion/inzoom",
 
@@ -16,6 +16,7 @@
             "48": "static/images/camera_lens_128.png",
             "128": "static/images/camera_lens_128.png"
           },        
+
           "default_title": "Inzoom - zoom in / out on images and videos"
     },   
 
@@ -41,6 +42,9 @@
             "lib/point.js", 
 
             "inzoom/inzoom.js"
+          ],
+          "css":[
+            "inzoom/style.css"
           ],
           "run_at": "document_start",
           "all_frames" : true
