@@ -3,21 +3,23 @@
     <head>
         <meta charset='UTF-8'>
         <title>Inzoom options</title>
+
         <link rel='stylesheet' type='text/css' href='../static/milligram/milligram.min.css'>
+        <link rel='stylesheet' type='text/css' href='../inzoom/style.css'>
         <link rel='stylesheet' type='text/css' href='style.css'>
         
         <script src="../lib/hamster.js"></script>	
         <script src="../lib/lightdom.js"></script>
         <script src="../lib/point.js"></script>
 
-        <script src="../config/default.js"></script>
+        <script src="../common/app.js"></script>
         <script src="../lib/config.js"></script>
  
         <script src="options.js"></script>
 
         <!-- 
             yes, this *is* necessary. The fact that we can see a 'welcome' console.log from inside inzoom.js
-            is because we have a video here in irame, which does call iframe independly.
+            is because we have a video here in iframe, which does call inzoom independly.
             That is also why we have the message twice.
         -->
         <script src="../inzoom/inzoom.js"></script>
@@ -64,23 +66,32 @@
                     <fieldset>
                         <h4>Zoom Modifiers</h4>
 
-                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.shift" />Shift</label>
-                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.alt" />Alt</label>
-                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.ctrl" />Ctrl</label>
+                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.shift" /><kbd>Shift</kbd></label>
+                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.alt" /><kbd>Alt</kbd></label>
+                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.ctrl" /><kbd>Ctrl</kbd></label>
 
                         <h4>Wheel</h4>
 
-                        <label class = 'label-inline'><input type="checkbox" name = 'zoom.wheel.direction' value = '1'/>Reverse direction</label>
+                        <label><input type="checkbox" name = 'zoom.wheel.direction' value = '1'/>Reverse direction</label>
                         
 
                         <h4>Dragging</h4>
 
-                        <label class = 'label-inline'><input type="checkbox" name = "dragging.enabled" />Enable dragging</label>
-                        <p class = 'note'>That is, after you zoom in/out an element, this element becomes "draggable", so you can move it around in its container</p>
+                        <label ><input type="checkbox" name = "dragging.enabled" />Enable dragging</label>
+                            <p class = 'note'>That is, after you zoom in/out an element, this element becomes "draggable", so you can move it around in its container</p>
+
+                        <h4>Context menu</h4>
+
+                        <label><input type="checkbox" name = "contextmenu.enabled" />Add context menu actions</label>
+                        <label><input type="checkbox" name = "contextmenu.enforceDefault" />Show default context menu with <kbd>Ctrl</kbd></label>
+                            <p class = 'note'>Useful on Chrome and sites overriding default context menu (like YouTube on video elements). </p>
+
+                        <label class = 'onlyInDev'><input type="checkbox" name = "contextmenu.tests" />Add 'tests' action</label>
 
                         <br>
+                        <!--
                         <input class="button" type="submit" value="Save">
-                        
+                        -->
                         <div class = 'message msg-inline  msg-default success'></div>
 
                     </fieldset>

@@ -10,6 +10,7 @@ let insideExtension = (
     typeof(browser) === 'object' || 
     (typeof chrome === 'object' && typeof chrome.extension === 'object'));
 
+var logger = new Logger('inzoom: ', app.isDev());
 
 
 /*
@@ -35,7 +36,7 @@ class NumberUnit{
 /*
 This takes care about moving (dragging) DOM Elements.
 It works by creating a new instance for every element, which is to be draggable.
-
+@todo move it to a separate file.
 */
 class ElementDraggable{
 
@@ -186,6 +187,9 @@ class ElementDraggable{
     */
   
 }
+/**
+ * @todo move it to a separate file
+ */
 class Utils{
     /**
      * Returns an inline style, i.e. element.style - thing is however it doesn't really work in FX,
@@ -260,9 +264,22 @@ class Inzoom{
                 this.onMessage(event);
             });                    
 
-            //to store clientX and clientY coordinates
+            //issue: context menu. In FX we need both rclick (useful when shift+rclick) and contextmenu isn't harmful here.
+            //on chrome we *need* contextmenu.
+            //we want to store clientX and clientY coordinates on context menu, will be useful when later user 
+            //will really call a command from the context menu. Useful only when we're inside extension.
+            document.addEventListener('click', (event) => {
+                if(event.button === 2){
+                    this.saveContextMenuEvent(event);
+                }
+            }, true);    
+
             document.addEventListener('contextmenu', (event) => {
-                this.onContextMenu(event);
+                this.saveContextMenuEvent(event);
+                //optional disabling website' context menu, which means the default one should appear.
+                if(this.config.get('contextmenu.enforceDefault') && event.ctrlKey){
+                    event.stopPropagation();
+                }
             }, true);    
 
         }
@@ -340,10 +357,14 @@ class Inzoom{
         return result;
     }
 
-    //we'll use current mouse pointer to find all the elements under cursor to find out 
-    //something which we can zoom in/out
-    //root at first is simply 'document', then, when going recursive, it can change into something else
-    //like a shadow element
+    /* 
+    we'll use current mouse pointer to find all the elements under cursor to find out 
+    something which we can zoom in/out
+    root at first is simply 'document', then, when going recursive, it can change into something else
+    like a shadow element
+    @param Document root - start node.
+    @param Point point - mouse point to use in the search.
+    */
     findElement2(root, point){
         let result = {
             type : null, //img, background-image
@@ -351,16 +372,15 @@ class Inzoom{
         };        
         //let elements = this.elementsFromPoint(event.clientX,event.clientY);
         let elements = root.elementsFromPoint(point.x, point.y); 
+        
         for (var element of elements) {
-
             if(typeof element.shadowRoot !== 'undefined' && element.shadowRoot){
-                console.log('found shadow!:',element.shadowRoot);
-                //console.log(element.shadowRoot.elementsFromPoint(event.clientX,event.clientY));
+                //console.log('found shadow!:',element.shadowRoot);
+                
                 result = this.findElement2(element.shadowRoot, point);
                 if(result.type !== null){
                     break;
                 }
-    
             }
             result = this.getElementInfo(l(element));
             if(result.type !== null){
@@ -407,79 +427,16 @@ class Inzoom{
     zoomElement(elementInfo, deltaX, deltaY){
         //should we zoom IN or OUT
         let enlarge = null;
-        if(this.config.all().zoom.wheel.direction == '0'){
+        if(this.config.get('zoom.wheel.direction') == 0){
             enlarge = deltaY > 0;
         }else{
             enlarge = deltaY < 0;
         }
         let ratio = enlarge ? 1.1:0.9;
-
-        let lElement = elementInfo.lElement;
-            
-        //restoring old style:
-        setTimeout(()=>{
-            //lElement.css('outline',this.curElementStyle['outline'] || '');
-        },600);
-
-        //console.log('-------------zooming-----------------');
-        //console.log('type: ' + elementInfo.type);
-
-        let hElem = lElement[0];
-        //is this the exactly same element as last time?
-        let curElementChanged = (this.curElement !== hElem);
-        this.curElement = hElem;
-        if(curElementChanged){
-            this.curElementStyle = Utils.getElementInlineStyle(lElement[0]);
-            //console.log('copied style:',this.curElementStyle);
-            //lElement.css('outline','1px dotted red');
-        }    
-        
-        let hParent = hElem.parentNode;
-        let elemWidth = hElem.offsetWidth;
-        let elemHeight = hElem.offsetHeight;
-
-        let computedStyle = window.getComputedStyle(hElem);
-        //console.log('computedStyle: ',computedStyle);
-        let parentComputedStyle = window.getComputedStyle(hParent);
-        
-        //should we move the element to the front (z-index)? 
-        let moveElemToFront = false;
-        
-        if(!this.testMode){
-            //this.transformElement(lElement,ratio);    
-            let transform = computedStyle.transform;
-            if(transform === '' || transform === 'none'){
-                transform = 'matrix(1,0,0,1,0,0)';
-            }         
-            //hmmm it seems to work o.O and no - it doesn't accumulate, it's more like recalculated.   
-            hElem.style.transform = transform + ` scale(${ratio},${ratio})`;
-            //hElem.classList.add('inzoomMoveable');
-            moveElemToFront = true;
-        }            
-       
-        //console.log('parent overflow:',parentComputedStyle['overflow']);
-        /*
-        if(moveElemToFront && curElementChanged && !this.testMode){
-            if(parentComputedStyle['overflow'] === 'hidden'){
-                
-                let zIndex = computedStyle['z-index'];
-                if(zIndex === 'auto'){
-                    zIndex = 0;
-                }
-                zIndex = this.lastZIndex + 1;
-                this.lastZIndex = zIndex;
-                lElement.css('z-index',zIndex);
-                lElement.css('position','absolute');
-            }        
-        }
-        */
-
-        //moving elements (dragging) 
-        if(!this.testMode && curElementChanged && this.config.all().dragging.enabled === true){
-            if(typeof hElem.inzoomDraggableInstance === 'undefined'){
-                hElem.inzoomDraggableInstance = new ElementDraggable(hElem);
-            }
-        }
+        this.runCommand(elementInfo.lElement[0],{
+            action: 'transform',
+            data: `scale(${ratio},${ratio})`,
+        });
     }
 
     findAndZoom(lElement, event, deltaX, deltaY){
@@ -490,7 +447,7 @@ class Inzoom{
     }
 
     /**
-     * Right now used only by onContextMenu
+     * Used both by onWheel (eventually) and onContextMenu and possibly others.
      * @param {HTMLElement} target element 
      * @param {Object} command, with action and possible other properties. 
      */
@@ -501,10 +458,27 @@ class Inzoom{
             //is this the exactly same element as last time?
             let curElementChanged = (this.curElement !== element);
             this.curElement = element;
+            let lElement = l(element);
+            let transitionDuration = 300;//ms
+            
             if(curElementChanged){
                 makeDraggable = true;
                 this.curElementStyle = Utils.getElementInlineStyle(element);
+                //lElement.css('outline','1px dotted red');
             }    
+            
+            //if called via context menu, we'll add some transitions here.
+            if(command.invokeInfo && command.invokeInfo.reason === 'contextmenu'){
+                lElement.css('transition-property','transform');
+                lElement.css('transition-duration',`${transitionDuration}ms`);
+
+                //restoring prev. style, if any
+                setTimeout(()=>{
+                    //lElement.css('outline',this.curElementStyle['outline'] || '');
+                    lElement.css('transition-property',this.curElementStyle['transition-property'] || '');
+                    lElement.css('transition-duration',this.curElementStyle['transition-duration'] || '');
+                },transitionDuration);
+            }
             let computedStyle = window.getComputedStyle(element);
             //this.transformElement(lElement,ratio);    
             let transform = computedStyle.transform;
@@ -516,7 +490,7 @@ class Inzoom{
             element.style.transform = transform + ' ' + command.data;
         }
         //moving elements (dragging) 
-        if(makeDraggable && this.config.all().dragging.enabled === true){
+        if(makeDraggable && this.config.get('dragging.enabled') === true){
             if(typeof element.inzoomDraggableInstance === 'undefined'){
                 element.inzoomDraggableInstance = new ElementDraggable(element);
             }
@@ -553,9 +527,11 @@ class Inzoom{
 
     /**
      * 
-     * contextmenu even on this document. We need it to remember click position and maybe other things.
+     * Fired when onClick with right mouse button, or on contextmenu event on THIS document. 
+     * We need it to remember click position and maybe 
+     * other things useful later when user fires a context menu command
      */
-    onContextMenu(event){
+    saveContextMenuEvent(event){
         this.contextMenuEvent = {};
         //copying (only scalar props) to our contextMenuEvent
         for (var prop in event){
@@ -563,16 +539,49 @@ class Inzoom{
                 continue;
             }
             this.contextMenuEvent[prop] = event[prop];
-        }        
-    }
-
+        }         
+    };
+  
+    /**
+     * 
+     * A message sent e.g. by background.js with browser.tabs.sendMessage....
+     * probably a context menu command.
+     */
     onMessage(message){
-        console.log('on message:');
-        console.log(message);
+        //console.log('-----------on message-------------');
+        //console.log('  message: ', message);
+        //console.log('  href: ',window.location.href);
         if(message.command){
+            /* 
+            ehhh, we're a bit tricky here. We can get called for every frame on a given page separetely.
+            plus, if clicked inside frame, we can get called for this one frame as well, because we're inside it as well.
+            passing 'frameId:0' to chrome.tabs.sendMessage does not solve anything, because with tihs we don't get any
+            call for the menu click anywhere. 
+            */            
+            if(message.command.invokeInfo){
+                let invokeInfo = message.command.invokeInfo;
+                let abort = false;
+                if(invokeInfo.frameUrl && invokeInfo.frameUrl !== window.location.href){
+                    abort = true;
+                }
+                if(!invokeInfo.frameUrl && (invokeInfo.pageUrl !== window.location.href)){
+                    abort = true;
+                }
+                if(abort){
+                    //console.log(' inovocation url doesn\'t match our url, aborting');
+                    return false;                    
+                };   
+            }
+            
+            
             if(message.command.action){//eg. 'transform'
+                if(!this.contextMenuEvent || typeof this.contextMenuEvent.clientX === 'undefined'){
+                    //for some reason we did not catch 'contextmenu' on this document ¯\_(ツ)_/¯ - probably 
+                    //because there are iframes inside iframes or something...
+                    return false;
+                }
                 let findResult = this.findElement2(document, new Point(this.contextMenuEvent.clientX,this.contextMenuEvent.clientY));
-                console.log('  ctx elem:', findResult);
+                //console.log('  ctx elem:', findResult);
                 if(findResult.type){
                     this.runCommand(findResult.lElement[0],message.command);
                 }
@@ -600,19 +609,19 @@ function inzoomSendMessage(param = 'default'){
 
 
 function init(){
-    console.log('in zoom init called in url:' + window.location.href);
+    logger.log('init called in url:' + window.location.href);
     if(insideExtension){
         //on pages testing inzoom directly (via script src...) we can put in the head tag: 
         //<meta name="EnableInzoomExtension" content="false">
         //to disable the extension on these pages.
         let enableInzoomMeta =  l('meta[name="EnableInzoomExtension"]').attr('content');
-        console.log('enableInzoomMeta:',enableInzoomMeta);
+        logger.log('enableInzoomMeta:',enableInzoomMeta);
         if(enableInzoomMeta === 'false' || enableInzoomMeta === '0'){
-            console.log('inzoom extension initing ABORTED, becase inside extension and EnableInzoomExtension set to false');
+            logger.log('inzoom extension initing ABORTED, becase inside extension and EnableInzoomExtension set to false');
             return;
         }
     }
-    console.log('in zoom initing, inside extension: ', insideExtension);
+    logger.log('initing, inside extension: ', insideExtension);
 
 
     //if we are *not* inside an extension,  we'll change the default params for Config class
@@ -624,7 +633,7 @@ function init(){
     }else{
         configParams = {
             storage : null,//a dummy one 
-            default : application.config, //this one should come from src/config/default.js
+            default : app.defaultConfig, //this one should come from src/common/app.js
         }
     }
     //note: config is being reread everytime user changes it in preferences.
@@ -635,24 +644,24 @@ function init(){
     });
 
     //tests tests tests
-    
+    /*
     document.addEventListener('keydown', (event) => {
         if(event.key == '.' && event.altKey){
             console.log('inzoom internal test started...');
-            console.log('t2');
+            
             //inzoomSendMessage('sent');
             //console.log(document.querySelectorAll('.addedAtRuntime'));
             //console.log(JSON.parse(JSON.stringify(document));
         }
     }, true);    
-    
+    */
 }
 
-//in case this script is called on document_start:
-document.addEventListener('DOMContentLoaded', init, false);
-//in case this script is called on 'document_end' or injected on already existing tabs
-if (document.readyState !== 'loading') {
-    init();
+
+if (document.readyState === "loading") {//might be 'loading' or 'complete'
+	document.addEventListener("DOMContentLoaded", init, false);
+} else {//dom already loaded (e.g. in case this script is called on document_end) so the above event will never fire, so:  
+	init();
 }
 
 

@@ -1,12 +1,21 @@
 
 function run(){
+    var logger = new Logger('inzoom options: ', app.isDev());
+
     let form = document.querySelector("form#config")
     //note: defaults were already loaded into storage on install.
     var config = new DotConfig({
         //if we're not in an extension - we'll give null as 'storage', so we can test other stuff, like css.
         //without errors 
         storage: typeof chrome.storage !== 'undefined' ? chrome.storage.local : null,
+        autoSave: false,
     });
+    
+    if(app.isDev()){
+        l('.onlyInDev').each(el => {
+            el.style.display = 'block';
+        });
+    }
     load();
 
     //string className  success or error
@@ -35,8 +44,8 @@ function run(){
         config.load(()=>{
             l('form#config input').each(element => {
                 if(element.type === 'checkbox'){
-                    let check = config.get(element.name) != false;
-                    //console.log('for ' + element.name + ' value is ' + config.get(element.name));
+                    //logger.log('for ' + element.name + ' value is ' + config.get(element.name));
+                    let check = config.get(element.name, false) != false;
                     element.checked = check;
                 }else if(element.type === 'text'){
                     element.value = config.get(element.name);
@@ -57,10 +66,12 @@ function run(){
                 config.set(element.name,element.value);
             }
         })
-        console.log('form saved');
-        if(showMessage){
-            message('Saved','success');
-        }
+        config.save(()=>{
+            logger.log('form saved');
+            if(showMessage){
+                message('Saved','success');
+            }
+        });
     }
         
     document.querySelector("form#config").addEventListener("submit", event => {
@@ -69,7 +80,7 @@ function run(){
     });	
 
     form.addEventListener("change", function () {
-        //console.log("Form has changed! change");
+        //logger.log("Form has changed! change");
         //works but... hmm...
         save();
     });    

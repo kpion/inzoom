@@ -1,11 +1,18 @@
 /*
 
-An abstraction layer over the different browser storage engines. Also dot.notation.for.your.keys.
+An abstraction layer over the different browser storage engines. 
+Also dot.notation.for.your.keys. Goals:
 
 Any storage engine can be used, like window.localStorage, or chrome.storage.local etc.
 
-All the data is stored under **one** key (by default called simply 'config'), so it's probably 
-not a good option to store huge amounts of data, it's more tailored for application configuration.
+Simplified, synced reading, like var user = config.get('user');
+
+With the DotConfig class, a dot notation like 'dialog.title.color' 
+
+To achieve all of this, all the config data is stored under **one** key (by default called simply 'config'), 
+so it's probably not a good option to store huge amounts of data, it's more tailored for application 
+configuration.
+
 
 Source: https://github.com/kpion
 
@@ -40,8 +47,15 @@ DotConfig: this class extends  Config, so everything's the same, except .get, .s
 now accept "dotted" keys, like here:
 
 let config = new DotConfig();
-config.set('dialog.width',342);
-console.log(config.get('dialog.width'));//342
+config.set('dialog.title.color','red');
+console.log(config.get('dialog.title.color'));//'red'
+
+with this, our html form could look like this:
+<input ... name = 'dialog.title.color'>
+<input ... name = 'dialog.title.width'>
+
+...
+for each element in form, do config.set(element.name,element.value);
 
 */ 
 
@@ -52,7 +66,8 @@ class Config{
             //default values:
             mainKey : 'config',
             default : {},//useful before .load. When .load is used it's merged into default.
-            //storage: window.localStorage
+            //storage: window.localStorage,//that  will be default if none provided
+            autoSave: true,//should we call .save() on every .set and .setAll methods. 
         }, params);  
 
         //this we handle differently, we use an existing object only when not passed in the constructor params 
@@ -70,13 +85,12 @@ class Config{
         
     }
 
-    /*
-    this one *merges* data from given storage area into current data (which by default is empty anyway). 
-    If you want, you can do .clearAll(); before.
-    Since it's anync operation, you might want to pass a callback.
+    /**
+    * Since it's anync operation, you might want to pass a callback.
+    * @param callback - a callback called when operation is done.
     */
     load(callback = null){
-        if(this.storage === null){//dummy one, we pretend we're fine and happy 
+        if(this.storage === null){//dummy one, for tests maybe, we pretend we're fine and happy 
             if(callback){
                 callback(this.data);
             }
@@ -85,36 +99,41 @@ class Config{
 
         //if storage is window.localStorage or window.sessionStorage.
         if(typeof this.storage.getItem === 'function'){
-            let data = JSON.parse(this.storage.getItem (this.params.mainKey)) || {};
-            Object.assign(this.data, data);
-            this.loaded = true;
+            let data = JSON.parse(this.storage.getItem (this.params.mainKey)) || null;
+            
+            if(data){
+                //Object.assign(this.data, data);
+                this.data = data;
+                this.loaded = true;
+            }    
+            
             if(callback){
-                callback(this.data);
+                callback(data);
             }
             return this;
         }
 
         //must be chrome/browser.storage.local/session/sync
-        this.storage.get('config',data => {
+        this.storage.get(this.params.mainKey,data => {
             if(typeof data === 'undefined'){
                 this.lastError = chrome.runtime.lastError;
                 callback(null);
                 return;
             }
-            this.loaded = true;
-            //this.data = data[this.params.mainKey] ? data[this.params.mainKey] : {};
             if(data[this.params.mainKey]){
-                Object.assign(this.data, data[this.params.mainKey]);
+                Object.assign(this.data, data[this.params.mainKey]);  
+                this.data = data[this.params.mainKey];
+                this.loaded = true;
             }
             if(callback){
-                callback(this.data);
+                callback(data[this.params.mainKey] || null);
             }
         });
         return this;
     }
 
     save(callback = null){
-        if(this.storage === null){//dummy one, we pretend we're fine and happy 
+        if(this.storage === null){//dummy one, for tests maybe, we pretend we're fine and happy 
             if(callback){
                 callback(this.data);
             }
@@ -136,21 +155,56 @@ class Config{
         return this;
     }
 
-    setAll(data, saveNow = true){
-        this.data = data;
-        if(saveNow){
-            this.save();
-        }        
+
+    /*
+    @oaram string key - a single key. Or null - in this case everything will be returned.
+    */
+   get(key = null, defaultVal = null){
+    if(key == null){
+        //similar behaviour to the storage.get, returning entire data. A clone of it.
+        return this.getAll(true); 
+    }
+    return typeof this.data[key] === 'undefined' ? defaultVal : this.data[key];
+}
+
+    /**
+     * 
+     * @param {string} key 
+     * @param {scalar|object} val 
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+     */
+    set(key, val, saveNow = null){
+        this.data[key] = val;
+        return this._saveConditionally(saveNow);
+    }
+
+
+    /**
+     * 
+     * @param {string} key 
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+     */
+    remove(key, saveNow = null){
+        delete this.data[key];
+        return this._saveConditionally(saveNow);     
+    }
+
+    getMainKey(){
+        return this.params.mainKey;
+    }
+
+    /**
+     * 
+     * @param {Object} data to put, will be cloned. 
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+     */
+    setAll(data, saveNow = null){
+        this.data = JSON.parse(JSON.stringify(data));
+        this._saveConditionally(saveNow);
         return this;
-    }
-
-    //alias for .all    
-    getAll(copy = false){
-        return this.all(copy);
-    }
-
-    clearAll(saveNow = true){
-        return this.setAll({},saveNow);
     }
 
     //read-write direct access to internal data object.
@@ -162,35 +216,78 @@ class Config{
         return this.data;
     }
 
-    /*
-    @oaram string key - a single key. Or null - in this case everything will be returned.
-    */
-    get(key = null, defaultVal = null){
-        if(key == null){
-            //similar behaviour to the storage.get, returning entire data. A clone of it.
-            return this.getAll(true); 
+    /**
+     * alias for .all    
+     */ 
+    getAll(copy = false){
+        return this.all(copy);
+    }
+
+    /**
+     * 
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+     */
+    clearAll(saveNow = null){
+        return this.setAll({},saveNow);
+    }
+
+  
+
+    /**
+     * More a utility function which maybe should go somewhere else....
+     * comparse recursively two objects and builds and returns an object with keys which are different 
+     * (removed, added, changed).
+     * May be useful with chrome.storage.onChanged.addListener((event)....
+     * let diff = config.diff(event.config.oldValue,event.config.newValue);
+     */
+    diff (obj1, obj2 = null) {
+        var result = {};
+
+        if(obj2 === null){
+            obj2 = this.data;
         }
-        return typeof this.data[key] === 'undefined' ? defaultVal : this.data[key];
-    }
-
-    set(key, val, saveNow = true){
-        this.data[key] = val;
-        if(saveNow){
-            this.save();
+        //going with properties in object 1
+        for (var p in obj1) {
+            //if object2 doesn't even have this property, we're done here
+            if(typeof obj2 === 'undefined' ||  !obj2.hasOwnProperty(p)) {
+                result[p] = {};
+                continue;
+            }
+            if(typeof (obj1[p]) === 'object' &&  typeof (obj2[p]) === 'object'){
+                let deepResult = this.diff(obj1[p], obj2[p]);
+                if(Object.keys(deepResult).length !== 0) {
+                    result[p] = deepResult;
+                }
+            }else{
+                if (obj1[p] != obj2[p]) {
+                    result[p] = {};
+                }
+            }
         }
-        return this;
+    
+        //Are there any properties in object 2 missing in object 1?
+        for (var p in obj2) {
+            if (typeof obj1 === 'undefined' || typeof obj1[p] == 'undefined') {
+                result[p] = {};
+            }
+        }
+        //return true;
+        return result;
+    };
+
+    /**
+     * Internal only. Used by .set,.setAll, .remove  - will save depending on the (bool) saveNow param
+     * optionally passed to those methods.
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+     */
+    _saveConditionally(saveNow = null, callback = null){
+        if(saveNow || (saveNow === null && this.params.autoSave)){
+            return this.save(callback);
+        }    
+        return this;        
     }
-
-
-
-    remove(key, saveNow = true){
-        delete this.data[key];
-        if(saveNow){
-            this.save();
-        }  
-        return this;      
-    }
-
 }
 
 class DotConfig extends Config{
@@ -198,25 +295,38 @@ class DotConfig extends Config{
         super(params);
     }
 
-    set(keyPath, val, saveNow = true){
+    /**
+     * 
+     * @param {string} keyPath path to the key like 'dialog.width'
+     * @param {scalar|object} val 
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+     */
+    set(keyPath, val, saveNow = null){
         this._objPath(keyPath.split('.'),this.data, val);
-        if(saveNow){
-            this.save();
-        }
-        return this; 
+        return this._saveConditionally(saveNow); 
     }
 
+    /**
+     * 
+     * @param {string} keyPath path to the key like 'dialog.width'
+     * @param {scalar|object} defaultVal 
+     */
     get(keyPath, defaultVal = null){
         let result = this._objPath(keyPath.split('.'),this.data);
         return typeof result === 'undefined' ? defaultVal : result;
     }
 
-    remove(keyPath, saveNow = true){
+    /**
+     * 
+     * @param {string} keyPath path to the key like 'dialog.width'
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+
+     */
+    remove(keyPath, saveNow = null){
         this._objPath(keyPath.split('.'),this.data, undefined, true);
-        if(saveNow){
-            this.save();
-        }
-        return this;         
+        return this._saveConditionally(saveNow);       
     }
 
 
