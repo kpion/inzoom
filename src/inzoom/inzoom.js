@@ -182,7 +182,7 @@ class ElementDraggable{
     var lastMousePos = new Point();
     
     
-    div  = document.querySelector('.inzoomMoveable');
+    div  = l('.inzoomMoveable');
     console.log('matrix:',getElementTransform(div));
     */
   
@@ -452,9 +452,10 @@ class Inzoom{
      * @param {Object} command, with action and possible other properties. 
      */
     runCommand(element, command){
-        let makeDraggable = false;
+        
         if(command.action === 'transform'){
-            
+            let makeDraggable = false;
+
             //is this the exactly same element as last time?
             let curElementChanged = (this.curElement !== element);
             this.curElement = element;
@@ -488,13 +489,18 @@ class Inzoom{
             //hmmm it seems to work o.O and no - it doesn't accumulate, it's more like recalculated.   
             //element.style.transform = transform + ` scale(${ratio},${ratio})`;
             element.style.transform = transform + ' ' + command.data;
+            //moving elements (dragging) 
+            if(makeDraggable && this.config.get('dragging.enabled') === true){
+                if(typeof element.inzoomDraggableInstance === 'undefined'){
+                    element.inzoomDraggableInstance = new ElementDraggable(element);
+                }
+            }              
         }
-        //moving elements (dragging) 
-        if(makeDraggable && this.config.get('dragging.enabled') === true){
-            if(typeof element.inzoomDraggableInstance === 'undefined'){
-                element.inzoomDraggableInstance = new ElementDraggable(element);
-            }
-        }        
+      
+        if(command.action === 'properties'){
+            
+            this.showModal('Inzoom element properties','<p>blah</p>');
+        }
     }
     //wheel somewhere on the page (body)
     onWheel(event, delta, deltaX, deltaY){
@@ -525,23 +531,49 @@ class Inzoom{
         }
     }
 
+   
     /**
+     * Creates (if needed) and shows the modal dialog.
      * 
-     * Fired when onClick with right mouse button, or on contextmenu event on THIS document. 
-     * We need it to remember click position and maybe 
-     * other things useful later when user fires a context menu command
+     * @param {bool} onlyOne true: will first check if there is already one and will return that one if exists,
+     *              if false: will create a new one (always).
+     * @param {string} htmlcontent
      */
-    saveContextMenuEvent(event){
-        this.contextMenuEvent = {};
-        //copying (only scalar props) to our contextMenuEvent
-        for (var prop in event){
-            if(typeof event[prop] === 'object'){
-                continue;
-            }
-            this.contextMenuEvent[prop] = event[prop];
-        }         
-    };
-  
+    showModal(title = '', content = '', onlyOne = true){
+        logger.log('createModal');
+        let elModal = document.querySelector('.inzoomModal');
+
+        //lets create one, if needed:
+        if(!onlyOne || !elModal){
+            //making one:
+            logger.log(' making.');
+            elModal = document.createElement("div"); 
+            elModal.classList.add('inzoomModal');
+            document.body.insertAdjacentElement('beforeend',elModal);
+        };
+
+        //regardles if this is new or existing one, we set innerHTML to:
+        elModal.innerHTML = `
+            <a href="javascript:;" class="inzoomModalClose" title="Close Modal">X</a>
+            <h3>${title}</h3>
+            <div class="inzoomModalContent">
+                ${content}
+            </div>
+        
+        `;
+        
+        //this ^ means we cleared all the events, so:
+        //l('.inzoomModal').classList.toggle('inzoomModalOn');
+        l('.inzoomModal .inzoomModalClose').on('click',(eve)=>{
+            eve.target.parentNode.classList.remove('inzoomModalOn');
+        });
+
+        //and finally - lets show it.
+        elModal.classList.add('inzoomModalOn');
+        return elModal; 
+        
+    }
+ 
     /**
      * 
      * A message sent e.g. by background.js with browser.tabs.sendMessage....
@@ -578,16 +610,36 @@ class Inzoom{
                 if(!this.contextMenuEvent || typeof this.contextMenuEvent.clientX === 'undefined'){
                     //for some reason we did not catch 'contextmenu' on this document ¯\_(ツ)_/¯ - probably 
                     //because there are iframes inside iframes or something...
+                    logger.log('context menu command but contextMenuEvent empty');
                     return false;
                 }
                 let findResult = this.findElement2(document, new Point(this.contextMenuEvent.clientX,this.contextMenuEvent.clientY));
                 //console.log('  ctx elem:', findResult);
                 if(findResult.type){
                     this.runCommand(findResult.lElement[0],message.command);
+                }else{
+                    logger.log('context menu command but no elemeent found');
                 }
             }
         }
     }
+
+    /**
+     * 
+     * Fired when onClick with right mouse button, or on contextmenu event on THIS document. 
+     * We need it to remember click position and maybe 
+     * other things useful later when user fires a context menu command
+     */
+    saveContextMenuEvent(event){
+        this.contextMenuEvent = {};
+        //copying (only scalar props) to our contextMenuEvent
+        for (var prop in event){
+            if(typeof event[prop] === 'object'){
+                continue;
+            }
+            this.contextMenuEvent[prop] = event[prop];
+        }         
+    };    
 }
 
 
@@ -650,7 +702,7 @@ function init(){
             console.log('inzoom internal test started...');
             
             //inzoomSendMessage('sent');
-            //console.log(document.querySelectorAll('.addedAtRuntime'));
+            //console.log(lAll('.addedAtRuntime'));
             //console.log(JSON.parse(JSON.stringify(document));
         }
     }, true);    

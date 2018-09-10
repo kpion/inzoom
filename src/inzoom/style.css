@@ -14,3 +14,72 @@ when the element is being dragged
     cursor: -webkit-grabbing; 
     cursor: grabbing;
  }
+
+/* ***************************************************
+    Modal dialog (properties) 
+*/
+
+/*
+based on https://codepen.io/TomJ1588/pen/raOmRK
+*/
+
+/* defaults + when turned off*/
+.inzoomModal{
+    position:fixed;
+    top:50%;
+    left:50%;
+    width:500px;
+    background:#fff;
+    border-radius:4px;
+    transform:translate(-50%, -150%);
+    transition:all 0.2s ease-in-out;
+    perspective: 1000;
+    outline:1px solid rgba(0,0,0,0.1);
+    opacity: 0;
+  }
+
+/* when turned on */
+.inzoomModal.inzoomModalOn{
+    transform:translate(-50%, -50%);
+    transition:all .2s ease-in-out;
+    transition-delay:0.1s;
+    z-index:9999;
+    opacity:1; 
+}
+
+/* close button */
+.inzoomModal .inzoomModalClose {
+    float:right;
+    text-decoration:none;
+    padding:22px 22px;
+    color:#424242;
+    font-weight:800;
+    transition:all .5s;
+    z-index:+1; 
+    background:rgba(0,0,0,0.1);
+    text-align:center;
+    border-radius:0 4px 0 0;
+}
+
+.inzoomModal .inzoomModalClose:hover {
+    color:#fff;
+    background:rgba(0,0,0,0.5);
+}
+
+.inzoomModal  h3 {
+    margin:0;
+    padding:20px;
+    display:block;
+    text-align:center;
+    border-bottom:1px solid #e0e0e0;
+    text-transform:uppercase;
+    background:rgba(2,162,239,1);
+    color:#fff;
+    border-radius:4px 4px 0 0;
+}
+
+.inzoomModal .inzoomModalContent{
+    padding:10px;
+}
+  
+  

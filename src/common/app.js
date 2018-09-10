@@ -37,7 +37,7 @@ const app =  {
         }
     },
 
-    evnironment : 'prod',//'prod' or 'dev'.
+    evnironment : 'dev',//'prod' or 'dev'.
 
     isDev : function(){
         return (this.evnironment && this.evnironment.toUpperCase()  == 'DEV');

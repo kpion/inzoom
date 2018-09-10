@@ -84,7 +84,7 @@ class InZoomContextMenu{
         type: 'separator',
       },      
 
-      info:{
+      properties:{
         title: 'Properties',
         action: 'properties',        
       },
