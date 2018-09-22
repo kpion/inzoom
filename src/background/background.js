@@ -79,7 +79,8 @@ class InZoomContextMenu{
         action: 'transform',
         data: 'rotate(180deg)',
       },        
-
+      /*
+      //there is a small issue described in inzoom.js
       separator2:{
         type: 'separator',
       },      
@@ -87,7 +88,7 @@ class InZoomContextMenu{
       properties:{
         title: 'Properties',
         action: 'properties',        
-      },
+      },*/
     };
 
     if(config.get('contextmenu.tests')){

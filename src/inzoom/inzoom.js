@@ -433,7 +433,7 @@ class Inzoom{
             enlarge = deltaY < 0;
         }
         let ratio = enlarge ? 1.1:0.9;
-        this.runCommand(elementInfo.lElement[0],{
+        this.runCommand(elementInfo,{
             action: 'transform',
             data: `scale(${ratio},${ratio})`,
         });
@@ -448,11 +448,11 @@ class Inzoom{
 
     /**
      * Used both by onWheel (eventually) and onContextMenu and possibly others.
-     * @param {HTMLElement} target element 
+     * @param {Object} result of this.findElement
      * @param {Object} command, with action and possible other properties. 
      */
-    runCommand(element, command){
-        
+    runCommand(elementInfo, command){
+        let element = elementInfo.lElement[0];
         if(command.action === 'transform'){
             let makeDraggable = false;
 
@@ -496,10 +496,26 @@ class Inzoom{
                 }
             }              
         }
-      
+
+        /*
+        This one is in progress, there are a few issues there. 
+        The idea was to display image/video url(s), as seen by inzoom, but with things inside iframes
+        this opens inside this iframe. Which isn't good.  Needs more work. 
+        So for now the 'properties' command is disabled in the contextmenu. 
+        */
         if(command.action === 'properties'){
-            
-            this.showModal('Inzoom element properties','<p>blah</p>');
+            let src = 'unknown'; 
+            if(elementInfo.type === 'img'){
+                src = element.getAttribute('src');
+            }
+            const url = new URL(src,window.location.href);
+            let html = `
+                <div>
+                    Source: ${url.href}
+                </div>
+            `;
+            logger.log(window.getComputedStyle(element));
+            this.showModal('Inzoom element properties',html);
         }
     }
     //wheel somewhere on the page (body)
@@ -616,7 +632,7 @@ class Inzoom{
                 let findResult = this.findElement2(document, new Point(this.contextMenuEvent.clientX,this.contextMenuEvent.clientY));
                 //console.log('  ctx elem:', findResult);
                 if(findResult.type){
-                    this.runCommand(findResult.lElement[0],message.command);
+                    this.runCommand(findResult,message.command);
                 }else{
                     logger.log('context menu command but no elemeent found');
                 }
