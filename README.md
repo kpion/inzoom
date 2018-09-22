@@ -8,9 +8,21 @@ Once you zoom in/out on an element, this element becomes draggable, useful in ca
 
 ## Install
 
-Firefox - the extension is listed on AMO - https://addons.mozilla.org/en-US/firefox/addon/in-zoom/
+### Firefox 
 
-Chrome - it **does** work fine in Chrome, but well... until it will be listed on Chrome Web Store the only way to install it is the manual one.
+The extension is listed on AMO - https://addons.mozilla.org/en-US/firefox/addon/in-zoom/
+
+### Chrome  
+
+The extension **does** work fine in Chrome, but well... until it will be listed on Chrome Web Store the only way to install it is the manual one:
+
+- Download the .zip file [here](https://github.com/kpion/inzoom/archive/master.zip) and unpack it
+
+- Go to the chrome://extensions URL  
+
+- Check "developer mode" 
+
+- Click the "LOAD UNPACKED" link and point chrome to the **src** subdirectory of the unpacked archive 
 
 <!--
 ## Permissions
