@@ -1,7 +1,7 @@
 {
-    "name": "Inzoom",
+    "name": "In Zoom",
     "version": "1.0",
-    "description": "Zoom in and out on images and videos using mouse wheel - \"inline\", without popups",
+    "description": "Zoom in and out on images and videos using shift + mouse wheel",
 
     "permissions": ["storage", "contextMenus"],
     
@@ -17,7 +17,7 @@
             "128": "static/images/camera_lens_128.png"
           },        
 
-          "default_title": "Inzoom - zoom in / out on images and videos"
+          "default_title": "In Zoom - zoom in / out on images and videos"
     },   
 
     "background": {

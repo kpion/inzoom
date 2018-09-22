@@ -125,7 +125,7 @@ class InZoomContextMenu{
     //main extension' menu
     chrome.contextMenus.create({
       id: "inzoom-root",
-      title: 'Inzoom',
+      title: 'In Zoom',
       'contexts': contexts,
     });
 
