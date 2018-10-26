@@ -567,7 +567,7 @@ class Inzoom{
      *              if false: will create a new one (always).
      * @param {string} htmlcontent
      */
-    showModal(title = '', content = '', onlyOne = true){
+    /*showModal(title = '', content = '', onlyOne = true){
         logger.log('createModal');
         let elModal = document.querySelector('.inzoomModal');
 
@@ -600,7 +600,7 @@ class Inzoom{
         elModal.classList.add('inzoomModalOn');
         return elModal; 
         
-    }
+    }*/
  
     /**
      * 
