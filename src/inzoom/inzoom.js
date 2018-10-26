@@ -517,6 +517,14 @@ class Inzoom{
             logger.log(window.getComputedStyle(element));
             this.showModal('Inzoom element properties',html);
         }
+
+        if(command.action === 'reset'){
+            if(element && element === this.curElement) {
+                //this will revert changes made by zooming and dragging.
+                this.curElement.style.transform = this.curElementStyle.transform || '';                     
+            }
+        }            
+        
     }
     //wheel somewhere on the page (body)
     onWheel(event, delta, deltaX, deltaY){
@@ -539,11 +547,15 @@ class Inzoom{
     onKeyDown(event){
         //escape key on "our" curElement? Then we'll undo our changes.
         if(event.keyCode == 27){
+            /*
             let foundResult = this.findElement(null, this.mousePos);
             if(foundResult.lElement && foundResult.lElement[0] === this.curElement){
                 //this will revert changes made by zooming and dragging.
                 this.curElement.style.transform = this.curElementStyle.transform || '';                     
-            }
+            }*/
+            this.runCommand(this.findElement(null, this.mousePos),{
+                action: 'reset',
+            });            
         }
     }
 

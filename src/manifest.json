@@ -1,6 +1,6 @@
 {
     "name": "In Zoom",
-    "version": "1.0",
+    "version": "1.1",
     "description": "Zoom in and out on images and videos using shift + mouse wheel",
 
     "permissions": ["storage", "contextMenus"],
