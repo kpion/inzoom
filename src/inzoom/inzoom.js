@@ -452,6 +452,13 @@ class Inzoom{
      * @param {Object} command, with action and possible other properties. 
      */
     runCommand(elementInfo, command){
+        
+        if(!elementInfo.lElement || !elementInfo.lElement[0]){
+            if(app.isDev()){
+                console.log('elementInfo is empty');
+            }
+            return false;
+        }
         let element = elementInfo.lElement[0];
         if(command.action === 'transform'){
             let makeDraggable = false;
