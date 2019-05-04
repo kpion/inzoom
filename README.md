@@ -14,15 +14,7 @@ The extension is listed on AMO - https://addons.mozilla.org/en-US/firefox/addon/
 
 ### Chrome  
 
-The extension **does** work fine in Chrome, but well... until it will be listed on Chrome Web Store the only way to install it is the manual one:
-
-- Download the .zip file [here](https://github.com/kpion/inzoom/archive/master.zip) and unpack it
-
-- Go to the chrome://extensions URL  
-
-- Check "developer mode" 
-
-- Click the "LOAD UNPACKED" link and point chrome to the **src** subdirectory of the unpacked archive 
+The extension is listed in Chrome Web Store: https://chrome.google.com/webstore/detail/in-zoom/oppcghdbglmbhhobfoodedhokbadlenh
 
 <!--
 ## Permissions
