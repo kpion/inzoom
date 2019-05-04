@@ -14,7 +14,7 @@ The extension is listed on AMO - https://addons.mozilla.org/en-US/firefox/addon/
 
 ### Chrome  
 
-The extension is listed in Chrome Web Store: https://chrome.google.com/webstore/detail/in-zoom/oppcghdbglmbhhobfoodedhokbadlenh
+The extension is listed on Chrome Web Store - https://chrome.google.com/webstore/detail/in-zoom/oppcghdbglmbhhobfoodedhokbadlenh
 
 <!--
 ## Permissions
