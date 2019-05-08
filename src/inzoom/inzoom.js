@@ -2,7 +2,7 @@
 
 /*
 this is the inzoom core. Included by extension (in manifest.json)
-as well, as can be tested standalone in any page.
+as well, as can be tested standalone in any page (e.g. is used in options pages)
 */
 
 //are we inside an extension or simply on a page as script src = '...'
@@ -191,10 +191,12 @@ class ElementDraggable{
  * @todo move it to a separate file
  */
 class Utils{
+
     /**
-     * Returns an inline style, i.e. element.style - thing is however it doesn't really work in FX,
-     * because it's not really a simple object, instead it's a CSSStyleDeclaration and we should do it
-     * this way.
+     * Returns an inline style, i.e. element.style - this one works both in FX and Chrome (other methods have
+     * some issues in one or the other) e.g. in Fx it's not really a simple object, instead it's a 
+     * CSSStyleDeclaration and... this isn't cool in some scenarios.
+     * 
      * Useful for making a 'backup' of user defined inline-style before changing it, so we can later modify it.  
      * @param HTMLElement element 
      * @return object with styles *modfied* by user. Otherwise it's not there. 
@@ -209,18 +211,32 @@ class Utils{
         }
         return result;
     }
+
+    /**
+     * This one is just a sort of alias for window.getComputedStyle, just for consistency with the getElementInlineStyle
+     */
+    static getElementComputedStyle(element, pseudoElement = null){
+        return getComputedStyle(element, pseudoElement);
+    }
 }
 class Inzoom{
 
     constructor(config){
         //config like wheel direction, keyboard shortcuts etc.
         this.config = config;
+
         //recently modified element (HTMLElement)
         this.curElement = null;
-        //last element style *copied* before doing anything.
-        this.curElementStyle = null;
-        //recently used zindex, so... the next one in the next element selected will be higher:)
+
+        //last element *inline* style *copied* before doing anything.
+        this.curElementOryginalStyle = null;
+
+        //last element *compputed* (everything) style *copied* before doing anything.
+        this.curElementOryginalComputedStyle = null;
+
+        //recently used zindex, so... the next one in the next element selected will be higher
         this.lastZIndex = 0;
+
         //"current"  mouse position (as recorded in )  
         this.mousePos =  new Point();
         this.testMode = false;
@@ -471,8 +487,9 @@ class Inzoom{
             
             if(curElementChanged){
                 makeDraggable = true;
-                this.curElementStyle = Utils.getElementInlineStyle(element);
-                //lElement.css('outline','1px dotted red');
+                this.curElementOryginalStyle = Utils.getElementInlineStyle(element);
+                this.curElementOryginalComputedStyle = Utils.getElementComputedStyle(element);
+                
             }    
             
             //if called via context menu, we'll add some transitions here.
@@ -482,9 +499,9 @@ class Inzoom{
 
                 //restoring prev. style, if any
                 setTimeout(()=>{
-                    //lElement.css('outline',this.curElementStyle['outline'] || '');
-                    lElement.css('transition-property',this.curElementStyle['transition-property'] || '');
-                    lElement.css('transition-duration',this.curElementStyle['transition-duration'] || '');
+                    //lElement.css('outline',this.curElementOryginalStyle['outline'] || '');
+                    lElement.css('transition-property',this.curElementOryginalStyle['transition-property'] || '');
+                    lElement.css('transition-duration',this.curElementOryginalStyle['transition-duration'] || '');
                 },transitionDuration);
             }
             let computedStyle = window.getComputedStyle(element);
@@ -524,14 +541,46 @@ class Inzoom{
             logger.log(window.getComputedStyle(element));
             this.showModal('Inzoom element properties',html);
         }
-
+        
+        //restoring oryg style.
         if(command.action === 'reset'){
             if(element && element === this.curElement) {
-                //this will revert changes made by zooming and dragging.
-                this.curElement.style.transform = this.curElementStyle.transform || '';                     
+                //this will revert changes made by zooming and dragging, and possibly other things 
+                //(e.g. bringing to front). @todo low priority:  a list of props changed in any place and
+                //here only a loop.
+                this.curElement.style.transform = this.curElementOryginalStyle.transform || ''; 
+                this.curElement.style.position = this.curElementOryginalStyle.position || ''; 
+                this.curElement.style['z-index'] = this.curElementOryginalStyle['z-index'] || ''; 
             }
         }            
-        
+
+        //bringing the thing to front (z-index), by default on ctrl+shift+]
+        if(command.action === 'front'){
+            if(element) {
+                console.info(element);
+                //position (relative, absolute) - if it's oryginally 'static' we'll have to change it, because
+                //z-index doesn't work on them, works only on positioned elements.
+                let changePositionTo = null;
+                //might later change the way we "calculate" it :)
+                let changeZindexTo = this.lastZIndex + 1000000;
+                const orygComputedStyle = Utils.getElementComputedStyle(element);
+                if(orygComputedStyle){
+                    if(orygComputedStyle.position === 'static'){
+                        changePositionTo = 'relative';
+                    }
+                    let orygZindex = orygComputedStyle['z-index'];
+                    //is it numeric? If so, then we'll change our prev. changeZindexTo:
+                    if(!isNaN(parseFloat(orygZindex)) && isFinite(orygZindex)){
+                        changeZindexTo = parseFloat(orygZindex) + 1000000;
+                    }
+                }
+                this.lastZIndex = changeZindexTo;
+                if(changePositionTo){
+                    element.style['position'] = changePositionTo;
+                }
+                element.style['z-index'] = changeZindexTo;
+            }          
+        }
     }
     //wheel somewhere on the page (body)
     onWheel(event, delta, deltaX, deltaY){
@@ -554,16 +603,18 @@ class Inzoom{
     onKeyDown(event){
         //escape key on "our" curElement? Then we'll undo our changes.
         if(event.keyCode == 27){
-            /*
-            let foundResult = this.findElement(null, this.mousePos);
-            if(foundResult.lElement && foundResult.lElement[0] === this.curElement){
-                //this will revert changes made by zooming and dragging.
-                this.curElement.style.transform = this.curElementStyle.transform || '';                     
-            }*/
             this.runCommand(this.findElement(null, this.mousePos),{
                 action: 'reset',
             });            
         }
+        //rght bracket, the ], or rather }, along with shift and control, just like
+        //in photoshop - bring layer to front.   
+        if(event.keyCode == 221 && event.ctrlKey && event.shiftKey){
+            this.runCommand(this.findElement(null, this.mousePos),{
+                action: 'front',
+            });            
+        }
+
     }
 
    
