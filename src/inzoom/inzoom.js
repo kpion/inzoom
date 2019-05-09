@@ -56,6 +56,7 @@ class ElementDraggable{
         this.lelement = l(element);
         element.classList.add('inzoom-draggable');
         this.lelement.on('mousedown', (event) => {
+            
             if(event.button === 0){//left mouse button
                 this.mouseIsDown = true;
                 this.lelement[0].classList.add('inzoom-dragging');
@@ -218,7 +219,85 @@ class Utils{
     static getElementComputedStyle(element, pseudoElement = null){
         return getComputedStyle(element, pseudoElement);
     }
+
+    /**
+     * in case an element is 'inprisoned' i.e. in a div having overflow: hidden,
+     * clones an element to the body so it's not cut anymore.
+     * @return htmlelement : cloned element
+     */
+    static freeElement(elem){
+        //some info:
+        const bodyRect = document.body.getBoundingClientRect();
+        const orygRect = elem.getBoundingClientRect();
+        //copy to the body
+        var clone = elem.cloneNode(true);
+        clone.classList.add('inzoom-clone-freed');
+        document.querySelector("body").appendChild(clone);
+        clone.style.position = 'absolute';
+        clone.style.left = orygRect.left + 'px';
+        clone.style.top = (orygRect.top + Math.abs(bodyRect.top)) + 'px';
+        return clone;
+    }    
 }
+
+/**
+ * Does any of the parent elements have 'overflow:hidden' or similar?
+ * That, and other questions.
+ * It just build an array of current and parent elements and their styles (computed styles)
+ */
+class ElementStudy {
+    constructor (element = null){
+        //array of: "our" element (the first one) and  then parents etc, up to the root.
+        //has objects with 'computedStyle:' and later maybe others.
+        this.parents = [];
+        if(element){
+            this.prepare(element);
+        }
+    }
+
+    /**
+     * 
+     * 0.1ms on 100 nodes up on medium cpu. So no worries.
+     */
+    prepare (element){
+        this.element = element;
+        let curElement = element;
+        let index = 0;
+        while (curElement != null) {
+            const info = {};
+            info.element = curElement;
+            info.computedStyle = getComputedStyle(curElement);
+            info.index = index;
+            this.parents.push(info);
+            curElement = curElement.parentElement;
+            
+            index++;
+            if(index > 100){
+                break;//defensive programming ;)
+            }
+        };
+    }
+
+    /**
+     * is any of the parent having display:hidden or anything else which hides our child directly or 
+     * indirectly?
+     * useful when deciding about the strategy with bringing to front.
+     */
+    isInprisoned(){
+        console.assert(this.parents.length !== 0, 'forgot to call .prepare?');
+        for (var i = 1; i < this.parents.length; i++) {
+            const info = this.parents[i];
+            if(info.computedStyle['overflow'] !== 'visible' 
+            || info.computedStyle['overflow-x'] !== 'visible'
+            || info.computedStyle['overflow-y'] !== 'visible'
+            ){
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
 class Inzoom{
 
     constructor(config){
@@ -544,6 +623,12 @@ class Inzoom{
         
         //restoring oryg style.
         if(command.action === 'reset'){
+            //if it's a clone we made because of 'front' action.
+            if(element && element.classList.contains('inzoom-clone-freed')){
+                element.remove();
+                return;
+            }
+            //'normal' situation
             if(element && element === this.curElement) {
                 //this will revert changes made by zooming and dragging, and possibly other things 
                 //(e.g. bringing to front). @todo low priority:  a list of props changed in any place and
@@ -552,12 +637,30 @@ class Inzoom{
                 this.curElement.style.position = this.curElementOryginalStyle.position || ''; 
                 this.curElement.style['z-index'] = this.curElementOryginalStyle['z-index'] || ''; 
             }
+
         }            
 
         //bringing the thing to front (z-index), by default on ctrl+shift+]
         if(command.action === 'front'){
             if(element) {
-                console.info(element);
+                const es = new ElementStudy(element);
+                const isInprisoned = es.isInprisoned();
+                //should we go with the 'clone element to body' strategy?
+                const makeItFree = isInprisoned;
+                if(makeItFree){
+                    const freed = Utils.freeElement(element);
+                    if(freed){
+                        let changeZindexTo = this.lastZIndex + 1000000;
+                        freed.style['z-index'] = changeZindexTo;
+                        //moving elements (dragging) 
+                        if(this.config.get('dragging.enabled') === true){
+                            if(typeof freed.inzoomDraggableInstance === 'undefined'){
+                                freed.inzoomDraggableInstance = new ElementDraggable(freed);
+                            }
+                        }                            
+                    }
+                    return;
+                }
                 //position (relative, absolute) - if it's oryginally 'static' we'll have to change it, because
                 //z-index doesn't work on them, works only on positioned elements.
                 let changePositionTo = null;
@@ -601,13 +704,17 @@ class Inzoom{
     }
 
     onKeyDown(event){
+
+        //'reset'
         //escape key on "our" curElement? Then we'll undo our changes.
         if(event.keyCode == 27){
             this.runCommand(this.findElement(null, this.mousePos),{
                 action: 'reset',
             });            
         }
-        //rght bracket, the ], or rather }, along with shift and control, just like
+
+        //'front'
+        //right bracket, the ], or rather }, along with shift and control, just like
         //in photoshop - bring layer to front.   
         if(event.keyCode == 221 && event.ctrlKey && event.shiftKey){
             this.runCommand(this.findElement(null, this.mousePos),{
@@ -726,6 +833,8 @@ class Inzoom{
             this.contextMenuEvent[prop] = event[prop];
         }         
     };    
+
+
 }
 
 

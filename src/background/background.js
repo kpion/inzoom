@@ -84,6 +84,12 @@ class InZoomContextMenu{
         type: 'separator',
       },
 
+      front : {
+        title: 'Bring to front',
+        action: 'front',
+        data: '',
+      },        
+
       reset : {
         title: 'Reset',
         action: 'reset',
