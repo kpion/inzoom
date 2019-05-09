@@ -345,6 +345,8 @@ class Inzoom{
     
         
         //tests:
+
+        //end of tests.
         //console.log('config.getAll get all:',this.config.getAll());
         if(insideExtension){
             //if config changed in storage, lets reread it.

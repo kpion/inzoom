@@ -28,7 +28,7 @@ const app =  {
         dragging : {
             enabled : true
         },
-
+        
         contextmenu: {
             enabled: true,
             //show default context menu (not a site's one, like youtube's)

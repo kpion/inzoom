@@ -85,13 +85,13 @@ class InZoomContextMenu{
       },
 
       front : {
-        title: 'Bring to front',
+        title: 'Bring to front (ctrl+shift+])',
         action: 'front',
         data: '',
       },        
 
       reset : {
-        title: 'Reset',
+        title: 'Reset (esc)',
         action: 'reset',
         data: '',
       },        
