@@ -645,6 +645,13 @@ class Inzoom{
         //bringing the thing to front (z-index), by default on ctrl+shift+]
         if(command.action === 'front'){
             if(element) {
+                let curElementChanged = (this.curElement !== element);
+                this.curElement = element;
+                if(curElementChanged){
+                    this.curElementOryginalStyle = Utils.getElementInlineStyle(element);
+                    this.curElementOryginalComputedStyle = Utils.getElementComputedStyle(element);
+                }    
+                
                 const es = new ElementStudy(element);
                 const isInprisoned = es.isInprisoned();
                 //should we go with the 'clone element to body' strategy?
@@ -707,22 +714,27 @@ class Inzoom{
 
     onKeyDown(event){
 
-        //'reset'
-        //escape key on "our" curElement? Then we'll undo our changes.
+        //'reset' action.
+        //escape key
         if(event.keyCode == 27){
             this.runCommand(this.findElement(null, this.mousePos),{
                 action: 'reset',
             });            
         }
 
-        //'front'
-        //right bracket, the ], or rather }, along with shift and control, just like
-        //in photoshop - bring layer to front.   
-        if(event.keyCode == 221 && event.ctrlKey && event.shiftKey){
+        //'front' action.
+        if(
+            (this.config.get('front.modifiers.ctrl') == event.ctrlKey)
+            && (this.config.get('front.modifiers.shift') == event.shiftKey)
+            && (this.config.get('front.modifiers.alt') == event.altKey)
+            && (this.config.get('front.key') == event.keyCode)
+        )   
+        {
+            event.preventDefault();
             this.runCommand(this.findElement(null, this.mousePos),{
                 action: 'front',
             });            
-        }
+        }  
 
     }
 

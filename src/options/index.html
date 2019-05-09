@@ -86,7 +86,20 @@
                         <label><input type="checkbox" name = "contextmenu.enforceDefault" />Show default context menu with <kbd>Ctrl</kbd></label>
                             <p class = 'note'>Useful on Chrome/Opera and sites overriding default context menu (like YouTube on video elements). </p>
 
-                        <label class = 'onlyInDev'><input type="checkbox" name = "contextmenu.tests" />Add 'tests' action</label>
+                        <h4>Bringing to front</h4>
+
+                        <label class = 'label-inline'><input type="checkbox" name="front.modifiers.shift" /><kbd>Shift</kbd></label>
+                        <label class = 'label-inline'><input type="checkbox" name="front.modifiers.alt" /><kbd>Alt</kbd></label>
+                        <label class = 'label-inline'><input type="checkbox" name="front.modifiers.ctrl" /><kbd>Ctrl</kbd></label>
+                        <br>
+                        <div>
+                            <label>Key: </label>
+                            <!-- this will be filled with js -->
+                            <select class = 'keyboard-keys' name = "front.key" style = 'width:100px;'>
+                            </select>
+                            <p class = 'note'>In case an image is covered by another element, you can press this shortcut, while hovering over it, to bring it to the front.</p>
+                        </div>
+                        <label><input type="checkbox" name = "contextmenu.tests" />Add 'tests' action</label>
 
                         <br>
                         <!--
@@ -99,7 +112,6 @@
             </section>
             <section class = 'container space'>
                 <h3>Help</h3>
-                <p>In case an image is covered by another element, you can press <kbd>Ctrl+Shift+]</kbd>, while hovering over it, to bring it to the front.</p>
                 <p>To reset an image to its oryginal size/position, you can press <kbd>escape</kbd> key, while hovering over it.</p>
                 <p>If you have any suggestions, please contact me - konradpapala@gmail.com or file an issue on <a href = 'https://github.com/kpion/inzoom'>https://github.com/kpion/inzoom</a></p>
             </section> 

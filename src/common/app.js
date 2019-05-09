@@ -28,13 +28,27 @@ const app =  {
         dragging : {
             enabled : true
         },
-        
+
         contextmenu: {
             enabled: true,
             //show default context menu (not a site's one, like youtube's)
             enforceDefault : true,
             tests: false,
-        }
+        },
+
+        //the 'bring to front' action
+        front : {
+            modifiers : {
+                shift : true,
+                ctrl : true,
+                alt : false,
+            },
+            key: 221,//']'
+            wheel : {
+                direction: 0,//0: normal, 1 : reversed
+            },    
+    
+        },        
     },
 
     evnironment : 'prod',//'prod' or 'dev'.

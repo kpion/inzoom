@@ -16,6 +16,7 @@ function run(){
             el.style.display = 'block';
         });
     }
+    build();//stuff like preparing selects with keyboard shortcuts.
     load();
 
     //string className  success or error
@@ -50,7 +51,11 @@ function run(){
                 }else if(element.type === 'text'){
                     element.value = config.get(element.name);
                 }
-            })
+            });
+            //special case for selects
+            l('form#config select').each(element => {
+                element.value = config.get(element.name);
+            })            
         });
     }
 
@@ -66,6 +71,11 @@ function run(){
                 config.set(element.name,element.value);
             }
         })
+        //special case for selects
+        l('form#config select').each(element => {
+            //element.value = config.get(element.name);
+            config.set(element.name,element.value);
+        })              
         config.save(()=>{
             logger.log('form saved');
             if(showMessage){
@@ -73,7 +83,52 @@ function run(){
             }
         });
     }
+    
+    //stuff like preparing selects with keyboard shortcuts.
+    function build(){
+        l('.keyboard-keys').each(select => {
+            feedKeyboardShortcutSelect(select);
+        });       
+    }
+
+    function feedKeyboardShortcutSelect(selectElement){
+        //const select = document.querySelector(selector);
+        function add(code, text){
+            const opt = document.createElement("option");  
+            opt.value = code;
+            opt.textContent = text;
+            selectElement.appendChild(opt);    
+        }
+        //letters
+        for (code = 65;code < 65+26; code++){
+            add(code,String.fromCharCode(code));
+        }
+        //digits
+        for (code = 48;code < 48+10; code++){
+            add(code,String.fromCharCode(code));
+        }
+        //special
+        add(13,'Enter');
+        add(32,'Space');
+        add(9,'Tab');
+        add(8,'Backspace');
         
+        add(45,'Insert');
+        add(46,'Delete');
+        add(36,'Home');
+        add(35,'End');
+        add(33,'Page up');
+        add(34,'Page down');
+        
+        add(188,',');
+        add(190,',');
+        
+        add(219,'[');
+        add(221,']');
+        add(189,'-');
+        add(187,'=');
+    }
+
     document.querySelector("form#config").addEventListener("submit", event => {
         event.preventDefault();
         save(true);
