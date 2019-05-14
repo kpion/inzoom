@@ -1,11 +1,12 @@
 {
     "name": "In Zoom",
-    "version": "1.3",
-    "description": "Zoom in and out on images and videos using shift + mouse wheel",
+    "version": "1.31",
+
+    "description": "Zoom in and out on images and videos using shift + mouse wheel and by other ways.",
 
     "permissions": ["storage", "contextMenus"],
     
-    "homepage_url": "https://github.com/kpion/inzoom",
+    "homepage_url": "https://kpion.github.io/inzoom/",
 
     "browser_action": {
         "default_popup": "browserAction/index.html",
@@ -21,13 +22,8 @@
     },   
 
     "background": {
-        "scripts": [
-            "common/app.js",
-            "lib/config.js", 
-            "background/background.js"
-        ]
-       
-     },
+        "page": "background/index.html"
+    },
 
     "content_scripts": [
         {

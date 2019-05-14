@@ -287,11 +287,16 @@ class ElementStudy {
         console.assert(this.parents.length !== 0, 'forgot to call .prepare?');
         for (var i = 1; i < this.parents.length; i++) {
             const info = this.parents[i];
-            if(info.computedStyle['overflow'] !== 'visible' 
-            || info.computedStyle['overflow-x'] !== 'visible'
-            || info.computedStyle['overflow-y'] !== 'visible'
-            ){
-                return true;
+            const tagName = info.element.tagName.toLowerCase();
+            //well, sometimes html has overflow: 'auto scroll' or scroll... e.g. on bing
+            //but we can't do anything about it, because it's about cloning to 'body' anyway.
+            if(tagName !== 'html' && tagName !== 'body'){
+                if(info.computedStyle['overflow'] !== 'visible' 
+                || info.computedStyle['overflow-x'] !== 'visible'
+                || info.computedStyle['overflow-y'] !== 'visible'
+                ){
+                    return true;
+                }
             }
         }
         return false;
@@ -315,6 +320,10 @@ class Inzoom{
 
         //recently used zindex, so... the next one in the next element selected will be higher
         this.lastZIndex = 0;
+
+        //the very last element brought to the front by the 'front' action, really only for very 
+        //temporary use
+        this.lastFrontElement = null;
 
         //"current"  mouse position (as recorded in )  
         this.mousePos =  new Point();
@@ -518,8 +527,11 @@ class Inzoom{
 
     
     /**
-     
+     * this is specific to using mouse wheel, if not, then it's better to directly
+     * call runCommand directly
+     * 
      * elementInfo - elementInfo  to work on, Usually found with this.findElement
+     * deltaY - the delta by which wheel was moved vertically   
      */ 
     zoomElement(elementInfo, deltaX, deltaY){
         //should we zoom IN or OUT
@@ -654,6 +666,7 @@ class Inzoom{
                 
                 const es = new ElementStudy(element);
                 const isInprisoned = es.isInprisoned();
+                
                 //should we go with the 'clone element to body' strategy?
                 const makeItFree = isInprisoned;
                 if(makeItFree){
@@ -666,7 +679,8 @@ class Inzoom{
                             if(typeof freed.inzoomDraggableInstance === 'undefined'){
                                 freed.inzoomDraggableInstance = new ElementDraggable(freed);
                             }
-                        }                            
+                        }
+                        this.lastFrontElement = freed;                           
                     }
                     return;
                 }
@@ -691,9 +705,16 @@ class Inzoom{
                     element.style['position'] = changePositionTo;
                 }
                 element.style['z-index'] = changeZindexTo;
+                if(this.config.get('dragging.enabled') === true){
+                    if(typeof element.inzoomDraggableInstance === 'undefined'){
+                        element.inzoomDraggableInstance = new ElementDraggable(element);
+                    }
+                }    
+                this.lastFrontElement = element;               
             }          
         }
     }
+
     //wheel somewhere on the page (body)
     onWheel(event, delta, deltaX, deltaY){
         //if required modifier keys do not meet keyboard status:
@@ -713,6 +734,23 @@ class Inzoom{
     }
 
     onKeyDown(event){
+        
+        //focused element
+        const activeEl = event.target;// document.activeElement;
+
+        //if user is entering text in some sort of text input then we won't do be doing .preventDefault
+        let userIsTypingText = false;
+        if(activeEl){
+            const tagName = activeEl.tagName.toLowerCase();
+            if(tagName === 'input' || tagName === 'textarea'){
+                userIsTypingText = true;
+            }
+        }
+        console.log('userIsTypingText?',userIsTypingText);
+        if(userIsTypingText){
+            //return;//questionable. 
+            
+        }
 
         //'reset' action.
         //escape key
@@ -730,12 +768,39 @@ class Inzoom{
             && (this.config.get('front.key') == event.keyCode)
         )   
         {
-            event.preventDefault();
+            if(!userIsTypingText){
+                event.preventDefault();
+            }
             this.runCommand(this.findElement(null, this.mousePos),{
                 action: 'front',
             });            
         }  
 
+        //'zoomFront' action. Actually... this should be another runCommand command...
+        //console.log(event,this.config.get('zoomFront.key'));
+        if(
+            this.config.get('zoomFront.enabled') === true
+            && this.config.get('zoomFront.modifiers.ctrl') == event.ctrlKey
+            && this.config.get('zoomFront.modifiers.shift') == event.shiftKey
+            && this.config.get('zoomFront.modifiers.alt') == event.altKey
+            && this.config.get('zoomFront.key') == event.keyCode
+        )   
+        {
+            if(!userIsTypingText){
+                event.preventDefault();
+            }
+            const elementInfo = this.findElement(null, this.mousePos);
+            this.runCommand(elementInfo,{
+                action: 'front',
+            });        
+            const frontedElementInfo = this.getElementInfo(l(this.lastFrontElement));
+            const ratio = 1.5;
+            this.runCommand(frontedElementInfo,{
+                action: 'transform',
+                data: `scale(${ratio},${ratio})`,
+            });            
+
+        }  
     }
 
    

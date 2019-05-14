@@ -10,9 +10,8 @@ function run(){
         storage: typeof chrome.storage !== 'undefined' ? chrome.storage.local : null,
         autoSave: false,
     });
-    
     if(app.isDev()){
-        l('.onlyInDev').each(el => {
+        l('.only-in-dev,.only-in-dev-box').each(el => {
             el.style.display = 'block';
         });
     }
@@ -86,7 +85,7 @@ function run(){
     
     //stuff like preparing selects with keyboard shortcuts.
     function build(){
-        l('.keyboard-keys').each(select => {
+        l('.shortcut-key').each(select => {
             feedKeyboardShortcutSelect(select);
         });       
     }
@@ -108,25 +107,31 @@ function run(){
             add(code,String.fromCharCode(code));
         }
         //special
-        add(13,'Enter');
-        add(32,'Space');
-        add(9,'Tab');
-        add(8,'Backspace');
-        
-        add(45,'Insert');
-        add(46,'Delete');
-        add(36,'Home');
-        add(35,'End');
-        add(33,'Page up');
-        add(34,'Page down');
-        
-        add(188,',');
-        add(190,',');
-        
-        add(219,'[');
-        add(221,']');
-        add(189,'-');
-        add(187,'=');
+        const specials = [
+            [13, 'Enter'],
+            [32, 'Space'] ,
+            [9,'Tab'],
+            [8,'Backspace'],
+            
+            [45,'Insert'],
+            [46,'Delete'],
+            [36,'Home'],
+            [35,'End'],
+            [33,'Page up'],
+            [34,'Page down'],
+            
+            [188,','],
+            [190,','],
+            
+            [219,'['],
+            [221,']'],
+            [189,'-'],
+            [187,'='],
+    
+        ];
+        specials.forEach(item => {
+            add(item[0],item[1]);
+        })
     }
 
     document.querySelector("form#config").addEventListener("submit", event => {
@@ -139,10 +144,32 @@ function run(){
         //works but... hmm...
         save();
     });    
+    
+    //actually this isn't very useful, because it ... doesn't happen in any real case
+    //scenario
+    document.querySelector("form#config #clear-options").addEventListener("click", event => {
+        if(confirm("Are you sure you want to CLEAR the options? Which doesn't make great sense?")){
+            config.removeMainKey();
+        }
+    });	
+
+    //bringing the default options back, i.e. just like the extension was just installed.
+    document.querySelector("form#config #reset-options").addEventListener("click", event => {
+        if(confirm("Are you sure you want to reset the options?")){
+            config.setAll(app.defaultConfig).save();
+            message('Options reset to defaults.','success');
+            setTimeout(()=>{
+                location.reload();
+            },500)
+        }
+    });	
+
+   
 }
 
 window.addEventListener("DOMContentLoaded", function(){
     run();
+ 
 });
     
 	

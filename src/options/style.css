@@ -1,5 +1,5 @@
 body{
-   
+   font-family: sans-serif;
 }
 
 .hidden{
@@ -7,7 +7,7 @@ body{
 }
 
 
-.header{
+header{
     background: #f4f5f6;
     border-bottom: .1rem solid #d1d1d1;
     display: block;
@@ -23,39 +23,32 @@ body{
     padding-left:50px;
 }
 
+h3{
+    font-size: 2rem;
+}
 .space{
     margin-top:30px;
     margin-bottom:30px;
 }
 
-.note{
-    font-size:85%;
-    color:#888;
-    margin-left:.5rem;
+main{
+
+}
+
+main label{
+
 }
 
 /*
-we'll show it in dev mode only
+i.e. 'wheel', 'dragging' etc.
 */
-.onlyInDev{
-    display:none;
-}
-
-/* stolen straight from stackoverflow.com */
-kbd {
-    display: inline-block;
-    margin: 0 .1em;
-    padding: .1em .6em;
-    font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
-    font-size: 11px;
-    line-height: 1.4;
-    color: #242729;
-    text-shadow: 0 1px 0 #FFF;
-    background-color: #e1e3e5;
-    border: 1px solid #adb3b9;
-    border-radius: 3px;
-    box-shadow: 0 1px 0 rgba(12,13,14,0.2), 0 0 0 2px #FFF inset;
-    white-space: nowrap;
+.subsection {
+    background-color: #fff;
+    margin: 5px auto 5px;
+    padding: 5px;
+    padding-left:1em;
+    max-width: 112.0rem;
+    width: 100%;
 }
 
 /* for use along with others, like <div class = 'message success'>*/
@@ -98,4 +91,60 @@ kbd {
     border: 1px solid rgb(199, 1, 1); 
     background: #FFBABA;
     color: #CC0000;
+}
+
+/*
+we'll show it in dev mode only, this one is for single elements
+*/
+.only-in-dev{
+    display:none;
+}
+
+/*
+we'll show it in dev mode only, this one is for a bunch of such elements
+*/
+.only-in-dev-box{
+    display:none;
+    border:2px dotted darkblue;
+    padding:10px;
+    
+}
+
+.note{
+    font-size:85%;
+    color:#888;
+    margin-left:.5rem;
+    margin-bottom: 1em;
+}
+
+
+/* keyboard shortcut and maybe other input devices - related tricks, liike gestures */
+.shortcut-box {
+
+}
+
+
+.shortcut-box select.shortcut-key{
+    width: 150px;
+    height: 2em;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+
+/* stolen straight from stackoverflow.com */
+kbd {
+    display: inline-block;
+    margin: 0 .1em;
+    padding: .1em .6em;
+    font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #242729;
+    text-shadow: 0 1px 0 #FFF;
+    background-color: #e1e3e5;
+    border: 1px solid #adb3b9;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 rgba(12,13,14,0.2), 0 0 0 2px #FFF inset;
+    white-space: nowrap;
 }

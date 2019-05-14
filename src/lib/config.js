@@ -65,7 +65,7 @@ class Config{
         params = Object.assign({
             //default values:
             mainKey : 'config',
-            default : {},//useful before .load. When .load is used it's merged into default.
+            default : {},//useful before .load. When .load is used it's merged into default (shallow).
             //storage: window.localStorage,//that  will be default if none provided
             autoSave: true,//should we call .save() on every .set and .setAll methods. 
         }, params);  
@@ -75,14 +75,19 @@ class Config{
             params.storage = window.localStorage;
         }
 
-        //to make accessing those ^ simpler:
+        
         this.params = params;  
-        this.data = params.default;
+        //this.data = params.default;//that was before 2019.05 o.O
+        this.data = JSON.parse(JSON.stringify(params.default));
         this.storage = params.storage;
 
         this.loaded = false;
         this.lastError = null;
         
+    }
+
+    getMainKey(){
+        return this.params.mainKey;
     }
 
     /**
@@ -155,17 +160,17 @@ class Config{
         return this;
     }
 
-
+   
     /*
     @oaram string key - a single key. Or null - in this case everything will be returned.
     */
-   get(key = null, defaultVal = null){
-    if(key == null){
-        //similar behaviour to the storage.get, returning entire data. A clone of it.
-        return this.getAll(true); 
+    get(key = null, defaultVal = null){
+        if(key == null){
+            //similar behaviour to the storage.get, returning entire data. A clone of it.
+            return this.getAll(true); 
+        }
+        return typeof this.data[key] === 'undefined' ? defaultVal : this.data[key];
     }
-    return typeof this.data[key] === 'undefined' ? defaultVal : this.data[key];
-}
 
     /**
      * 
@@ -182,21 +187,6 @@ class Config{
 
     /**
      * 
-     * @param {string} key 
-     * @param {bool} saveNow - should we also flush everything to the storage. 
-     *                         null means 'auto', i.e. depends on the params.autoSave.
-     */
-    remove(key, saveNow = null){
-        delete this.data[key];
-        return this._saveConditionally(saveNow);     
-    }
-
-    getMainKey(){
-        return this.params.mainKey;
-    }
-
-    /**
-     * 
      * @param {Object} data to put, will be cloned. 
      * @param {bool} saveNow - should we also flush everything to the storage. 
      *                         null means 'auto', i.e. depends on the params.autoSave.
@@ -205,6 +195,17 @@ class Config{
         this.data = JSON.parse(JSON.stringify(data));
         this._saveConditionally(saveNow);
         return this;
+    }
+
+    /**
+     * 
+     * @param {string} key 
+     * @param {bool} saveNow - should we also flush everything to the storage. 
+     *                         null means 'auto', i.e. depends on the params.autoSave.
+     */
+    remove(key, saveNow = null){
+        delete this.data[key];
+        return this._saveConditionally(saveNow);     
     }
 
     //read-write direct access to internal data object.
@@ -224,58 +225,134 @@ class Config{
     }
 
     /**
-     * 
+     * Removes all the keys under our 'mainKey'. 
+     * Note: if you want to completely remove everything, *including* mainKey, use 
+     * this.removeMainKey
      * @param {bool} saveNow - should we also flush everything to the storage. 
      *                         null means 'auto', i.e. depends on the params.autoSave.
+     * 
      */
     clearAll(saveNow = null){
         return this.setAll({},saveNow);
     }
 
   
+    /**
+     * Removes absolutely everything, including the main key itself 
+     * That is in contrast to clearAll which clears the *contens* of our mainKey.
+     */
+    removeMainKey(callback = null){
+        if(this.storage === null){//dummy one, for tests maybe, we pretend we're fine and happy 
+            if(callback){
+                callback(this.data);
+            }
+            return this;
+        }
+
+        //if storage is window.localStorage or window.sessionStorage.        
+        if(typeof this.storage.setItem === 'function'){
+            this.storage.removeItem (this.params.mainKey);
+            if(callback){
+                callback(this.data);
+            }
+            return this;
+        }
+        //must be chrome/browser.storage.local/session/sync
+        this.storage.remove(this.params.mainKey,callback);
+        return this;
+    }
 
     /**
      * More a utility function which maybe should go somewhere else....
-     * comparse recursively two objects and builds and returns an object with keys which are different 
-     * (removed, added, changed).
+     * Compare recursively two objects and builds and returns an object with keys which are different 
+     * (missing, added, changed).
+     * 
      * May be useful with chrome.storage.onChanged.addListener((event)....
      * let diff = config.diff(event.config.oldValue,event.config.newValue);
+     * 
+     * @param flags: what to return (default values){
+     *  missingOnLeft: true - return props existing in the obj2 (right) which are missing in left (obj1)
+     *  missingOnRight: true - return props existing in the obj1 (left) which are missing in right (obj2),
+     *  differrent: true,- when a prop is on both sides, but it differs - still return it.
+     * }
      */
-    diff (obj1, obj2 = null) {
+    diff (obj1, obj2 = null, flags = {}) {
         var result = {};
 
         if(obj2 === null){
             obj2 = this.data;
         }
+        const showMissingOnLeft = (typeof flags.missingOnLeft === 'undefined')?true:flags.missingOnLeft;
+        const showMissingOnRight = (typeof flags.missingOnRight === 'undefined')?true:flags.missingOnRight;
+        const showDifferent = (typeof flags.different === 'undefined')?true:flags.different;
         //going with properties in object 1
         for (var p in obj1) {
             //if object2 doesn't even have this property, we're done here
             if(typeof obj2 === 'undefined' ||  !obj2.hasOwnProperty(p)) {
-                result[p] = {};
+                if(showMissingOnRight){
+                    result[p] = {};
+                }
                 continue;
             }
             if(typeof (obj1[p]) === 'object' &&  typeof (obj2[p]) === 'object'){
-                let deepResult = this.diff(obj1[p], obj2[p]);
+                let deepResult = this.diff(obj1[p], obj2[p], flags);
                 if(Object.keys(deepResult).length !== 0) {
                     result[p] = deepResult;
                 }
-            }else{
-                if (obj1[p] != obj2[p]) {
-                    result[p] = {};
+            }else{//simple values
+                
+                if(showDifferent){
+                    if (obj1[p] != obj2[p]) {
+                        result[p] = {};
+                    }
                 }
             }
         }
     
         //Are there any properties in object 2 missing in object 1?
-        for (var p in obj2) {
-            if (typeof obj1 === 'undefined' || typeof obj1[p] == 'undefined') {
-                result[p] = {};
+        if(showMissingOnLeft){
+            for (var p in obj2) {
+                if (typeof obj1 === 'undefined' || typeof obj1[p] == 'undefined') {
+                    result[p] = {};
+                }
             }
         }
-        //return true;
+        
         return result;
     };
 
+    /**
+     * Just like the .diff method, this really should go somewhere else .... 
+     * Will copy (change) keys here in this object from 'src', but only if missing in this.data
+     * In other words, will only update (clone) new keys.
+     * Might be useful when e.g. a new version with new config keys appears - we might want to copy
+     * the new config stuff into our storage in the update procedure.
+     * 
+     * @param {*} src source object
+     * @param {*} target - it's used in recursive call only
+     */
+    setMissing (src, target = null) {
+        if(target === null){
+            target = this.data;
+        }
+
+        for (var prop in src) {
+            //it's an object, but not an array (we want to treat arrays just like scalars here)
+            if(typeof src[prop] === 'object' && !Array.isArray(src[prop])){
+                if(typeof target[prop] === 'undefined'){
+                    target[prop] = {};
+                }
+                if(typeof target[prop] === 'object'){
+                    this.setMissing(src[prop],target[prop]);
+                }
+            }else{//it must be a scalar, or array
+                if(typeof target[prop] === 'undefined'){
+                    target[prop] = src[prop];
+                }
+            }
+        }     
+        return this;
+    }
     /**
      * Internal only. Used by .set,.setAll, .remove  - will save depending on the (bool) saveNow param
      * optionally passed to those methods.

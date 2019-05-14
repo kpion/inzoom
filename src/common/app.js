@@ -39,18 +39,30 @@ const app =  {
         //the 'bring to front' action
         front : {
             modifiers : {
-                shift : true,
-                ctrl : true,
-                alt : false,
+                shift : false,
+                ctrl : false,
+                alt : true,
             },
-            key: 221,//']'
-            wheel : {
-                direction: 0,//0: normal, 1 : reversed
-            },    
-    
-        },        
+            key: 65,//'A'
+        },  
+
+        //the 'zoom in and bring to front' action      
+        zoomFront: {
+            enabled: true,
+            modifiers : {
+                shift : false,
+                ctrl : false,
+                alt : true,
+            },
+            key: 90,//'z'
+        },
+
+        tests: {
+            
+        }
     },
 
+  
     evnironment : 'prod',//'prod' or 'dev'.
 
     isDev : function(){

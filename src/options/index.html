@@ -26,21 +26,22 @@
         
     </head>
     <body>
+       
+        <header>
+            <section class = 'container'>
+                <h1>In Zoom</h1>
+                <div>Tests &amp; Configuration</div>
+                <div class = 'clearfix'>
+                    <div class = 'float-right'><a href = 'https://kpion.github.io/inzoom'>Home page &amp; Source</a></div>
+                </div>    
+            </section>
+
+        </header>     
+
         <main class = 'wrapper'>
-            
-            <nav class = 'header'>
-                <section class = 'container'>
-                    <h1>In Zoom</h1>
-                    <div>Tests &amp; Configuration</div>
-                    <div class = 'clearfix'>
-                        <div class = 'float-right'><a href = 'https://github.com/kpion/inzoom'>On github.com</a></div>
-                    </div>    
-                </section>
-            </nav>
-
-
             <section class = 'container space' id = 'tests' >
-                <h3>Tests area</h3>
+                <h2>Tests area</h2>
+
                 <p class = 'note'>
                     Hover mouse over the video or image, press the modifier key(s) and use mouse wheel to zoom in or out.<br>
                     Optionally, click and drag to position the element.
@@ -60,49 +61,73 @@
 
             
             <section class = 'container space'>
-                <h3>Configuration</h3>    
+                <h2>Configuration</h2>    
                 <form id = 'config'>
                    
                     <fieldset>
-                        <h4>Zoom Modifiers</h4>
-
-                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.shift" /><kbd>Shift</kbd></label>
-                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.alt" /><kbd>Alt</kbd></label>
-                        <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.ctrl" /><kbd>Ctrl</kbd></label>
-
-                        <h4>Wheel</h4>
-
-                        <label><input type="checkbox" name = 'zoom.wheel.direction' value = '1'/>Reverse direction</label>
-                        
-
-                        <h4>Dragging</h4>
-
-                        <label ><input type="checkbox" name = "dragging.enabled" />Enable dragging</label>
-                            <p class = 'note'>That is, after you zoom in/out an element, this element becomes "draggable", so you can move it around in its container</p>
-
-                        <h4>Context menu</h4>
-
-                        <label><input type="checkbox" name = "contextmenu.enabled" />Add context menu actions</label>
-                        <label><input type="checkbox" name = "contextmenu.enforceDefault" />Show default context menu with <kbd>Ctrl</kbd></label>
-                            <p class = 'note'>Useful on Chrome/Opera and sites overriding default context menu (like YouTube on video elements). </p>
-
-                        <h4>Bringing to front</h4>
-
-                        <label class = 'label-inline'><input type="checkbox" name="front.modifiers.shift" /><kbd>Shift</kbd></label>
-                        <label class = 'label-inline'><input type="checkbox" name="front.modifiers.alt" /><kbd>Alt</kbd></label>
-                        <label class = 'label-inline'><input type="checkbox" name="front.modifiers.ctrl" /><kbd>Ctrl</kbd></label>
-                        <br>
-                        <div>
-                            <label>Key: </label>
-                            <!-- this will be filled with js -->
-                            <select class = 'keyboard-keys' name = "front.key" style = 'width:100px;'>
-                            </select>
-                            <p class = 'note'>In case an image is covered by another element, you can press this shortcut, while hovering over it, to bring it to the front.</p>
+                        <h3>Zoom Modifiers</h3>
+                        <div class = 'subsection'>
+                            <div class = 'shortcut-box'>
+                                <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.shift" /><kbd>Shift</kbd></label>
+                                <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.ctrl" /><kbd>Ctrl</kbd></label>
+                                <label class = 'label-inline'><input type="checkbox" name="zoom.modifiers.alt" /><kbd>Alt</kbd></label>
+                            </div>
                         </div>
-                        
-                        <label class = 'onlyInDev'><input type="checkbox" name = "contextmenu.tests" />Add 'tests' action</label>
 
-                        <br>
+                        <h3>Wheel</h3>
+                        <div class = 'subsection'>
+                            <label><input type="checkbox" name = 'zoom.wheel.direction' value = '1'/>Reverse direction</label>
+                        </div>    
+
+                        <h3>Dragging</h3>
+                        <div class = 'subsection'>
+                            <p class = 'note'>That is, after you zoom in/out an element, this element becomes "draggable", so you can move it around in its container</p>
+                            <label ><input type="checkbox" name = "dragging.enabled" />Enable dragging</label>
+                        </div>
+
+                        <h3>Context menu</h3>
+                        <div class = 'subsection'>
+                            <label><input type="checkbox" name = "contextmenu.enabled" />Add context menu actions</label>
+                            <p class = 'note'>Showing default - useful on Chrome/Opera and sites overriding default context menu (like YouTube on video elements). </p>
+                            <label><input type="checkbox" name = "contextmenu.enforceDefault" />Show default context menu with <kbd>Ctrl</kbd></label>
+                        </div>
+
+                        <h3>Bringing to front</h3>
+                        <div class = 'subsection'>
+                            <p class = 'note'>In case an image is covered by another element, you can press this shortcut, while hovering over it, to bring it to the front.</p>
+                            <div class = 'shortcut-box'>
+                                <label class = 'label-inline'><input type="checkbox" name="front.modifiers.shift" /><kbd>Shift</kbd></label>
+                                <label class = 'label-inline'><input type="checkbox" name="front.modifiers.ctrl" /><kbd>Ctrl</kbd></label>
+                                <label class = 'label-inline'><input type="checkbox" name="front.modifiers.alt" /><kbd>Alt</kbd></label>
+                                <select class = 'shortcut-key' name = "front.key">
+                                </select>
+                            </div>    
+                        </div>
+
+                        <h3>Alternative zooming: zoom in and bring to front</h3>
+                        <div class = 'subsection'>
+                            <p class = 'note'>In case an image is covered by another element, you can press this shortcut, while hovering over it, to both zoom in and bring it to the front.</p>
+                            <label><input type="checkbox" name = "zoomFront.enabled" />Enable</label>
+                            <div class = 'shortcut-box'>
+                                <label class = 'label-inline'><input type="checkbox" name="zoomFront.modifiers.shift" /><kbd>Shift</kbd></label>
+                                <label class = 'label-inline'><input type="checkbox" name="zoomFront.modifiers.ctrl" /><kbd>Ctrl</kbd></label>
+                                <label class = 'label-inline'><input type="checkbox" name="zoomFront.modifiers.alt" /><kbd>Alt</kbd></label>
+                                <select class = 'shortcut-key' name = "zoomFront.key">
+                                </select>                        
+                            </div>
+                        </div>
+
+                        <!-- dev stuff -->
+
+                        <div class = 'only-in-dev-box' >
+                            <h3>Developer stuff</h3>
+                            <div class = 'subsection'>
+                                <button type = 'button' id = 'reset-options'>Reset to defaults</button>
+                                <label><input type="checkbox" name = "contextmenu.tests" />Add 'tests' action</label>
+                                <button type = 'button'id = 'clear-options'>Clear otpions</button>
+                                <p class = 'note'>Probably useless, because this doesn't happen in real scenarios</p>
+                            </div>
+                        </div>
                         <!--
                         <input class="button" type="submit" value="Save">
                         -->
@@ -113,8 +138,10 @@
             </section>
             <section class = 'container space'>
                 <h3>Help</h3>
-                <p>To reset an image to its oryginal size/position, you can press <kbd>escape</kbd> key, while hovering over it.</p>
-                <p>If you have any suggestions, please contact me - konradpapala@gmail.com or file an issue on <a href = 'https://github.com/kpion/inzoom'>https://github.com/kpion/inzoom</a></p>
+                <div class = 'subsection'>
+                    <p>To reset an image to its oryginal size/position, you can press <kbd>escape</kbd> key, while hovering over it.</p>
+                    <p>If you have any suggestions, please contact me - konradpapala@gmail.com or file an issue on <a href = 'https://github.com/kpion/inzoom'>https://github.com/kpion/inzoom</a></p>
+                </div>    
             </section> 
         </main>
         
