@@ -126,7 +126,7 @@
     
         // cross-browser addEventListener
         //hamster.element[Hamster.ADD_EVENT](Hamster.PREFIX + eventName, handler, useCapture || false);
-        //my changes: !kp
+        //my changes: !kp (added passive: false)
         hamster.element[Hamster.ADD_EVENT](Hamster.PREFIX + eventName, handler, {
           passive: false, capture: useCapture || false
         });

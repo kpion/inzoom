@@ -1,5 +1,6 @@
 body{
-   font-family: sans-serif;
+    font-family: sans-serif;
+    font-weight: normal;
 }
 
 .hidden{
@@ -8,11 +9,14 @@ body{
 
 
 header{
-    background: #f4f5f6;
+    
+    background-color: #637682;
+    background: radial-gradient(circle at 10% 50% /*closest-side*/, rgba(99, 118, 130, 0.7), rgba(99, 118, 130, 1));
     border-bottom: .1rem solid #d1d1d1;
     display: block;
     width: 100%;
     padding:20px 0px;
+    color:white;
 }
 
 .header h1{
@@ -21,6 +25,12 @@ header{
     background-size: 36px;
     background-position: 0 10px;    
     padding-left:50px;
+}
+header a {
+    color:#ccc;
+}
+header a:hover {
+    color:#fff;
 }
 
 h3{
@@ -35,8 +45,8 @@ main{
 
 }
 
-main label{
-
+label{
+    font-weight: normal;
 }
 
 /*
@@ -112,7 +122,7 @@ we'll show it in dev mode only, this one is for a bunch of such elements
 
 .note{
     font-size:85%;
-    color:#888;
+    color:#555;
     margin-left:.5rem;
     margin-bottom: 1em;
 }

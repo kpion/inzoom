@@ -53,14 +53,12 @@ chrome.runtime.onInstalled.addListener((details) => {
         //our config var.
         //We need to find what's new in the app.defaultConfig and bring it to the config 
         //(both our var and local storage)
-        console.log('in app.defaultConfig:', JSON.parse(JSON.stringify(app.defaultConfig)));
-        console.log('in config var:',JSON.parse(JSON.stringify(config.data)));
         const  diff = config.diff(app.defaultConfig,config.data,{
             missingOnRight:true,
             missingOnLeft:false,
             different:false,
         }); 
-        console.log('diff:', diff);
+
         config.setMissing(app.defaultConfig);
         config.save();
         doingInstallConfigSave = false;

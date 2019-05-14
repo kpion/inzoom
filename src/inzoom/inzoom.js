@@ -718,13 +718,16 @@ class Inzoom{
     //wheel somewhere on the page (body)
     onWheel(event, delta, deltaX, deltaY){
         //if required modifier keys do not meet keyboard status:
+        //alt modifier won't work on ubuntu+kde, because alt+mouse actions are 
+        //is reserved to do some tricks like moving / resizing windows (or maybe it's just 
+        //my setup? IDK:))
         if((this.config.get('zoom.modifiers.ctrl') && !event.originalEvent.ctrlKey)
             || (this.config.get('zoom.modifiers.shift') && !event.originalEvent.shiftKey)
             || (this.config.get('zoom.modifiers.alt') && !event.originalEvent.altKey))
         {
             return;
         }
-        event.originalEvent.preventDefault();
+        event.originalEvent.preventDefault();//problem when non - passive: https://www.chromestatus.com/features/6662647093133312
         this.findAndZoom(l(event.target),event.originalEvent,deltaX,deltaY);
     }
 
@@ -746,7 +749,7 @@ class Inzoom{
                 userIsTypingText = true;
             }
         }
-        console.log('userIsTypingText?',userIsTypingText);
+        //console.log('userIsTypingText?',userIsTypingText);
         if(userIsTypingText){
             //return;//questionable. 
             
