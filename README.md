@@ -10,7 +10,7 @@ Once you zoom in/out on an element, this element becomes draggable, useful in ca
 
 ### Firefox 
 
-The extension is listed on AMO - https://addons.mozilla.org/en-US/firefox/addon/in-zoom/
+The extension is listed on AMO - https://addons.mozilla.org/firefox/addon/in-zoom/
 
 ### Chrome  
 
